@@ -1,0 +1,24 @@
+{
+  "name": "kultura-brunch-bot",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "start": "node -r dotenv/config src/js",
+    "dev": "nodemon -r dotenv/config src/js",
+    "eslint": "eslint --ext .js src/",
+    "test": "npm run eslint"
+  },
+  "author": "dreadwood",
+  "dependencies": {
+    "dotenv": "16.0.3",
+    "googleapis": "108.0.0",
+    "node-telegram-bot-api": "0.59.0",
+    "telegraf": "4.9.2"
+  },
+  "devDependencies": {
+    "eslint": "8.24.0",
+    "eslint-config-htmlacademy": "6.0.0",
+    "nodemon": "2.0.20"
+  }
+}
