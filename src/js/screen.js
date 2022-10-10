@@ -1,6 +1,8 @@
 'use strict';
 
-const {getEventListKeyboard, getEventsData} = require('./data-service');
+const path = require('path');
+const {getEventsData} = require('./data-service');
+const {getEventListKeyboard} = require('./keyboard');
 const {welcomeText, getPaymentTemplate, getAccountOwnerTempale, getAccountNumberTempale, getRequestReceipTempale, getEventTempale} = require('./templates');
 
 
@@ -18,15 +20,16 @@ async function welcomeScreen(bot, chatId) {
 
 async function eventScreen(bot, chatId, event) {
   const eventText = getEventTempale(event);
+  const posterPath = path.join(__dirname, '..', 'img', event.poster);
 
-  await bot.sendPhoto(chatId, event.poster, {
+  await bot.sendPhoto(chatId, posterPath, {
     caption: eventText,
     reply_markup: {
       inline_keyboard: [
         [
           {
             text: 'купить билиет',
-            callback_data: `buy-${event.id}`,
+            callback_data: event.id,
           },
         ],
         [
@@ -87,25 +90,6 @@ function doneScreen(bot, chatId) {
 }
 
 
-function contactRequestScreen(bot, chatId, ticketCount) {
-  bot.sendMessage(chatId, `Вы выбрали ${ticketCount} билетов. Напишите, пожалуйста, ваше имя и номер телефона`, {
-    reply_markup: {
-      keyboard: [
-        [{
-          text: 'оставить номер телефона',
-          request_contact: true,
-        }],
-        [{
-          text: 'вернуться назад',
-          callback_data: 'inition_state',
-        }],
-      ],
-      one_time_keyboard: true,
-    },
-  });
-}
-
-
 module.exports = {
   welcomeScreen,
   eventScreen,
@@ -115,7 +99,4 @@ module.exports = {
   paymentScreen,
   checkScreen,
   doneScreen,
-
-
-  contactRequestScreen,
 };
