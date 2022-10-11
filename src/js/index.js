@@ -53,7 +53,7 @@ bot.on('callback_query', async (query) => {
       undoneScreen(bot, userId);
     }
 
-    state.changeStatus(chatId, OrderStatus.WELCOME);
+    state.setState(chatId, {status: OrderStatus.WELCOME});
 
     return;
   }
@@ -63,7 +63,10 @@ bot.on('callback_query', async (query) => {
 
 
 async function processRequest(chatId, msg, query, type) {
-  const status = state.getStatus(chatId);
+  if (!state.checkState(chatId)) {
+    state.initionlState(chatId);
+  }
+  const {status} = state.getState(chatId);
 
   switch (status) {
     case OrderStatus.WELCOME: {
@@ -76,8 +79,10 @@ async function processRequest(chatId, msg, query, type) {
           return;
         }
 
-        state.setEvent(chatId, event);
-        state.changeStatus(chatId, OrderStatus.EVENT);
+        state.setState(chatId, {
+          event,
+          status: OrderStatus.EVENT,
+        });
 
         eventScreen(bot, chatId, event);
       } else {
@@ -90,7 +95,7 @@ async function processRequest(chatId, msg, query, type) {
 
     case OrderStatus.EVENT: {
       if (type === 'callback_query') {
-        const event = state.getEvent(chatId);
+        const {event} = state.getState(chatId);
         const orders = await getClientsData();
 
         const ordersEvent = orders.filter((order) => order.event === event.id);
@@ -105,7 +110,7 @@ async function processRequest(chatId, msg, query, type) {
         }
 
         ticketScreen(bot, chatId, ticketsOnSale);
-        state.changeStatus(chatId, OrderStatus.TICKET);
+        state.setState(chatId, {status: OrderStatus.TICKET});
       } else {
         // никак
       }
@@ -116,12 +121,14 @@ async function processRequest(chatId, msg, query, type) {
     case OrderStatus.TICKET: {
       if (type === 'text' && !isNaN(Number(msg.text))) {
         const countTicket = msg.text;
-        state.setInput(chatId, {countTicket});
+        state.setState(chatId, {
+          countTicket,
+          status: OrderStatus.NAME,
+        });
 
-        state.changeStatus(chatId, OrderStatus.NAME);
         nameScreen(bot, chatId, countTicket);
       } else {
-        const event = state.getEvent(chatId);
+        const {event} = state.getState(chatId);
         ticketScreen(bot, chatId, event);
       }
       break;
@@ -131,12 +138,14 @@ async function processRequest(chatId, msg, query, type) {
     case OrderStatus.NAME: {
       if (type === 'text') {
         const name = msg.text;
-        state.setInput(chatId, {name});
-        state.changeStatus(chatId, OrderStatus.PHONE);
+        state.setState(chatId, {
+          name,
+          status: OrderStatus.PHONE,
+        });
 
         phoneScreen(bot, chatId);
       } else {
-        const {countTicket} = state.getInput(chatId);
+        const {countTicket} = state.getState(chatId);
         nameScreen(bot, chatId, countTicket);
       }
       break;
@@ -146,10 +155,12 @@ async function processRequest(chatId, msg, query, type) {
     case OrderStatus.PHONE: {
       if (type === 'contact') {
         const phone = msg.contact.phone_number;
-        state.setInput(chatId, {phone});
-        state.changeStatus(chatId, OrderStatus.PAYMENT);
+        state.setState(chatId, {
+          phone,
+          status: OrderStatus.PAYMENT,
+        });
 
-        const event = state.getEvent(chatId);
+        const {event} = state.getState(chatId);
         paymentScreen(bot, chatId, event);
       } else {
         phoneScreen(bot, chatId);
@@ -161,27 +172,27 @@ async function processRequest(chatId, msg, query, type) {
     case OrderStatus.PAYMENT: {
       if (type === 'photo' || type === 'document') {
         checkScreen(bot, chatId);
-        state.changeStatus(chatId, OrderStatus.CHECK);
+        state.setState(chatId, {status: OrderStatus.CHECK});
 
-        const userInput = state.getInput(chatId);
-        const event = state.getEvent(chatId);
-        chanelScreen(bot, CHANEL_ID, msg, userInput);
+        const stateUser = state.getState(chatId);
+        const {event, name, phone, countTicket} = stateUser;
+        chanelScreen(bot, CHANEL_ID, msg, stateUser);
 
         addClientsData([
           chatId,
           msg.from.first_name, // first
           msg.from.last_name, // last
           msg.from.username, // nick
-          userInput.name,
-          userInput.phone,
-          userInput.countTicket, // ticket
+          name,
+          phone,
+          countTicket, // ticket
           '', // payment,
           new Date().toLocaleString(), // date
           event.id, // event
         ]);
 
       } else {
-        const event = state.getEvent(chatId);
+        const {event} = state.getState(chatId);
         paymentScreen(bot, chatId, event);
       }
       break;
@@ -196,7 +207,7 @@ async function processRequest(chatId, msg, query, type) {
 
     case OrderStatus.DONE: {
       // doneScreen(bot, chatId);
-      // state.changeStatus(chatId, OrderStatus.WELCOME);
+      // state.setState(chatId, {status: OrderStatus.WELCOME});
       break;
     }
 

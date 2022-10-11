@@ -94,9 +94,9 @@ function undoneScreen(bot, chatId) {
   bot.sendMessage(chatId, 'Почему-то мы не видем вашей оплаты. Прошу связаться с @dreadwood');
 }
 
-async function chanelScreen(bot, chanelId, msg, userInput) {
+async function chanelScreen(bot, chanelId, msg, stateUser) {
   const {message_id, from: {id, first_name, last_name, username}} = msg;
-  const {name, phone, countTicket} = userInput;
+  const {name, phone, countTicket} = stateUser;
 
   await bot.forwardMessage(chanelId, id, message_id);
   await bot.sendMessage(chanelId, `${name}\n${phone}

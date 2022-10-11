@@ -7,51 +7,29 @@ class State {
     this._state = {};
   }
 
-  initionlState(id) { // TODO: 2022-10-07 / private?
+  initionlState(id) {
     this._state[id] = {
-      input: {
-        name: null,
-        phone: null,
-        countTicket: null,
-      },
+      name: null,
+      phone: null,
+      countTicket: null,
       event: null,
       status: OrderStatus.WELCOME,
     };
-
-    // console.log(`Создан новый state для пользователя ${id}`);
   }
 
-  changeStatus(id, status) {
-    this._state[id].status = status;
-    // console.log(`Состояние изменилось на ${status}`);
+  checkState(id) {
+    return !!this._state[id];
   }
 
-  getInput(id) {
-    return this._state[id].input;
-  }
-
-  setInput(id, obj) {
-    this._state[id].input = {
-      ...this._state[id].input,
-      ...obj,
+  setState(id, date) {
+    this._state[id] = {
+      ...this._state[id],
+      ...date,
     };
   }
 
-  getStatus(id) {
-    if (!this._state[id]) {
-      this.initionlState(id);
-    }
-
-    return this._state[id].status;
-  }
-
-  setEvent(id, event) {
-    this._state[id].event = event;
-    // console.log(`Было выбрано событие ${event.title}`);
-  }
-
-  getEvent(id) {
-    return this._state[id].event;
+  getState(id) {
+    return this._state[id];
   }
 }
 
