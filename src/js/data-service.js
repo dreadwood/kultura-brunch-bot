@@ -6,7 +6,9 @@ const {getAuthClient} = require('./google-auth');
 
 const {SPREADSHEET_ID} = process.env;
 
-const getApiClient = async () => {
+const STATUS_CODE_OK = 200;
+
+async function getApiClient() {
   const authClient = await getAuthClient();
   const {spreadsheets: apiClient} = google.sheets({
     version: 'v4',
@@ -14,67 +16,56 @@ const getApiClient = async () => {
   });
 
   return apiClient;
-};
+}
 
+// записать данные в таблицу
+async function addSheetData(page, data) {
+  const apiClient = await getApiClient();
 
-const getSheetData = async (apiClient, page, legendCells = '', dataCells = '') => {
-  const {data} = await apiClient.get({
+  const res = await apiClient.values.append({
     spreadsheetId: SPREADSHEET_ID,
-    ranges: [
-      `'${page}'${legendCells}`,
-      `'${page}'${dataCells}`,
-    ],
-    fields: 'sheets',
-    includeGridData: true,
+    range: `${page}`,
+    valueInputOption: 'USER_ENTERED',
+    resource: {
+      values: [data],
+    },
   });
 
-  return data.sheets;
-};
+  return res.status === STATUS_CODE_OK;
+}
 
-
-const getRowData = async (page, legendCells, dataCells) => {
+// получить данные таблицы
+async function getSheetData(page, legendCells, dataCells) {
   const apiClient = await getApiClient();
-  const [sheet] = await getSheetData(apiClient, page, legendCells, dataCells);
 
-  const legend = sheet.data[0].rowData[0].values.map((it) => it.formattedValue);
-  const data = sheet.data[1].rowData.reduce((arr, row) => {
-    if (!row.values[0].formattedValue) {
-      return arr;
-    }
+  const {data: {valueRanges}} = await apiClient.values.batchGet({
+    spreadsheetId: SPREADSHEET_ID,
+    ranges: [
+      `${page}!${legendCells}`,
+      `${page}!${dataCells}`,
+    ],
+  });
 
-    const objRow = row.values.reduce((acc, it, i) => {
-      acc[legend[i]] = it.formattedValue;
+  const legend = valueRanges[0].values;
+  const data = valueRanges[1].values;
 
-      return acc;
-    }, {});
+  if (!legend || !data) {
+    return [];
+  }
 
-    arr.push(objRow);
+  return data.map((row) => row.reduce((acc, cell, i) => {
+    acc[legend[0][i]] = cell;
+    return acc;
+  }, {}));
+}
 
-    return arr;
-  }, []);
+// ===============================================
 
-  return data;
-};
+async function getEventsData() {
+  return await getSheetData(Pages.EVENTS, 'A1:L1', 'A3:L9');
+}
 
-
-/**
-* @async
-* @param {number}
-* @returns {Object.<string, string>[]} data event
-*/
-const getEventsData = async () => {
-  const data = await getRowData(Pages.EVENTS, '!A1:L1', '!A3:L9');
-
-  return data;
-};
-
-
-/**
-* @async
-* @param {number} eventId
-* @returns {Object.<string, string>} data event
-*/
-const getEventData = async (eventId) => {
+async function getEventData(eventId) {
   const data = await getEventsData();
   const eventData = data.find((it) => it.id === eventId);
 
@@ -83,23 +74,20 @@ const getEventData = async (eventId) => {
   }
 
   return eventData;
-};
+}
 
+async function getClientsData() {
+  return await getSheetData(Pages.CLIENTS, 'A1:J1', 'A3:J33');
+}
 
-/**
-* @async
-* @param {number}
-* @returns {Object.<string, string>[]} data event
-*/
-const getClientsData = async () => {
-  const data = await getRowData(Pages.CLIENTS, '!A1:I1', '!A3:I33');
-
-  return data;
-};
+function addClientsData(data) {
+  addSheetData(Pages.CLIENTS, data);
+}
 
 
 module.exports = {
   getEventsData,
   getEventData,
   getClientsData,
+  addClientsData,
 };

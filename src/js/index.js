@@ -2,7 +2,7 @@
 
 const TelegramBot = require('node-telegram-bot-api');
 const {OrderStatus} = require('./const');
-const {getEventData} = require('./data-service');
+const {getEventData, addClientsData, getClientsData} = require('./data-service');
 const {
   welcomeScreen,
   eventScreen,
@@ -12,12 +12,14 @@ const {
   paymentScreen,
   checkScreen,
   doneScreen,
+  chanelScreen,
+  undoneScreen,
 } = require('./screen');
 const State = require('./state');
 // const {debug} = require('./utils');
 
-const {TOKEN} = process.env;
-const bot = new TelegramBot(TOKEN, {polling: true});
+const {BOT_TOKEN, CHANEL_ID} = process.env;
+const bot = new TelegramBot(BOT_TOKEN, {polling: true});
 
 const state = new State();
 
@@ -26,18 +28,36 @@ const state = new State();
 // bot.on('callback_query', (query) => {});
 // bot.on('contact', (msg) => {});
 // bot.on('photo', (msg) => {});
-// bot.onText('/\/start/', (msg) => {})
+// bot.onText('/\/start/', (msg) => {});
 
 bot.on('message', (msg, metadata) => {
-  console.log(metadata);
-
   const chatId = msg.chat.id;
+
+  if (metadata.type === 'text' && (msg.text === '/start' || msg.text === '/reset')) {
+    state.initionlState(chatId);
+  }
+
   processRequest(chatId, msg, null, metadata.type);
 });
 
 
 bot.on('callback_query', async (query) => {
   const chatId = query.message.chat.id;
+  if (chatId === Number(CHANEL_ID)) {
+    const userId = query.from.id;
+    const buttonQueryData = query.data;
+
+    if (Number(buttonQueryData)) {
+      doneScreen(bot, userId);
+    } else {
+      undoneScreen(bot, userId);
+    }
+
+    state.changeStatus(chatId, OrderStatus.WELCOME);
+
+    return;
+  }
+
   processRequest(chatId, null, query, 'callback_query');
 });
 
@@ -49,9 +69,7 @@ async function processRequest(chatId, msg, query, type) {
     case OrderStatus.WELCOME: {
       if (type === 'callback_query') {
         const eventId = query.data;
-        bot.sendMessage(chatId, eventId);
         const event = await getEventData(eventId);
-
 
         if (!event) {
           bot.sendMessage(chatId, 'К сожалению, такого мероприятия нет.');
@@ -65,6 +83,7 @@ async function processRequest(chatId, msg, query, type) {
       } else {
         welcomeScreen(bot, chatId);
       }
+
       break;
     }
 
@@ -72,9 +91,21 @@ async function processRequest(chatId, msg, query, type) {
     case OrderStatus.EVENT: {
       if (type === 'callback_query') {
         const event = state.getEvent(chatId);
-        state.changeStatus(chatId, OrderStatus.TICKET);
+        const orders = await getClientsData();
 
-        ticketScreen(bot, chatId, event);
+        const ordersEvent = orders.filter((order) => order.event === event.id);
+        const ticketsOnSale = ordersEvent.reduce(
+          (acc, order) => (acc -= Number(order.ticket)),
+          Number(event.capacity),
+        );
+
+        if (ticketsOnSale <= 0) {
+          bot.sendMessage(chatId, 'К сожалению, на это мероприятие билетов больше нет');
+          return;
+        }
+
+        ticketScreen(bot, chatId, ticketsOnSale);
+        state.changeStatus(chatId, OrderStatus.TICKET);
       } else {
         // никак
       }
@@ -131,6 +162,24 @@ async function processRequest(chatId, msg, query, type) {
       if (type === 'photo' || type === 'document') {
         checkScreen(bot, chatId);
         state.changeStatus(chatId, OrderStatus.CHECK);
+
+        const userInput = state.getInput(chatId);
+        const event = state.getEvent(chatId);
+        chanelScreen(bot, CHANEL_ID, msg, userInput);
+
+        addClientsData([
+          chatId,
+          msg.from.first_name, // first
+          msg.from.last_name, // last
+          msg.from.username, // nick
+          userInput.name,
+          userInput.phone,
+          userInput.countTicket, // ticket
+          '', // payment,
+          new Date().toLocaleString(), // date
+          event.id, // event
+        ]);
+
       } else {
         const event = state.getEvent(chatId);
         paymentScreen(bot, chatId, event);
@@ -141,14 +190,13 @@ async function processRequest(chatId, msg, query, type) {
 
     case OrderStatus.CHECK: {
       bot.sendMessage(chatId, 'Мы сейчас проверим чек и отправим вам потвержедние');
-      state.changeStatus(chatId, OrderStatus.DONE);
       break;
     }
 
 
     case OrderStatus.DONE: {
-      doneScreen(bot, chatId);
-      state.changeStatus(chatId, OrderStatus.WELCOME);
+      // doneScreen(bot, chatId);
+      // state.changeStatus(chatId, OrderStatus.WELCOME);
       break;
     }
 

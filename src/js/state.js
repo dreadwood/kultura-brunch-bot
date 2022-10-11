@@ -17,13 +17,8 @@ class State {
       event: null,
       status: OrderStatus.WELCOME,
     };
-    // console.log(`Создан новый state для пользователя ${id}`);
-  }
 
-  checkUser(id) {
-    if (!this._state[id]) {
-      this.initionlState(id);
-    }
+    // console.log(`Создан новый state для пользователя ${id}`);
   }
 
   changeStatus(id, status) {
@@ -36,11 +31,9 @@ class State {
   }
 
   setInput(id, obj) {
-    console.log(this._state);
-    console.log(obj);
     this._state[id].input = {
       ...this._state[id].input,
-      obj,
+      ...obj,
     };
   }
 

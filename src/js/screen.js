@@ -1,3 +1,4 @@
+/* eslint-disable camelcase */
 'use strict';
 
 const path = require('path');
@@ -44,8 +45,8 @@ async function eventScreen(bot, chatId, event) {
 }
 
 
-function ticketScreen(bot, chatId, event) {
-  bot.sendMessage(chatId, `Сколько вам билетов? Отправте число от 1 до ${event.capacity}`);
+function ticketScreen(bot, chatId, ticket) {
+  bot.sendMessage(chatId, `Сколько вам билетов? Отправте число от 1 до ${ticket}`);
 }
 
 
@@ -89,6 +90,39 @@ function doneScreen(bot, chatId) {
   bot.sendMessage(chatId, 'Поздравляем оплата прошла. Мы ждем вас [дополнительная информация].');
 }
 
+function undoneScreen(bot, chatId) {
+  bot.sendMessage(chatId, 'Почему-то мы не видем вашей оплаты. Прошу связаться с @dreadwood');
+}
+
+async function chanelScreen(bot, chanelId, msg, userInput) {
+  const {message_id, from: {id, first_name, last_name, username}} = msg;
+  const {name, phone, countTicket} = userInput;
+
+  await bot.forwardMessage(chanelId, id, message_id);
+  await bot.sendMessage(chanelId, `${name}\n${phone}
+Колличество билетов: ${countTicket}`);
+
+  await bot.sendMessage(chanelId, `id: ${id}
+first name: ${first_name}
+last name: ${last_name || ''}
+username: ${username}`, {
+    reply_markup: {
+      inline_keyboard: [
+        [
+          {
+            text: 'потвердить',
+            callback_data: 1,
+          },
+          {
+            text: 'не ок',
+            callback_data: 0,
+          },
+        ],
+      ],
+    },
+  });
+}
+
 
 module.exports = {
   welcomeScreen,
@@ -99,4 +133,6 @@ module.exports = {
   paymentScreen,
   checkScreen,
   doneScreen,
+  undoneScreen,
+  chanelScreen,
 };
