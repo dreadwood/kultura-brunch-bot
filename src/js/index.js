@@ -12,13 +12,6 @@ const bot = new TelegramBot(BOT_TOKEN, {polling: true});
 
 const state = new State();
 
-// bot.on('message', (msg, metadata) => {});
-// bot.on('text', (msg) => {});
-// bot.on('callback_query', (query) => {});
-// bot.on('contact', (msg) => {});
-// bot.on('photo', (msg) => {});
-// bot.onText('/\/start/', (msg) => {});
-
 bot.on('message', (msg, metadata) => {
   const chatId = msg.chat.id;
 
@@ -32,7 +25,6 @@ bot.on('message', (msg, metadata) => {
 
 bot.on('callback_query', async (query) => {
   const chatId = query.message.chat.id;
-  console.log(query);
 
   if (chatId === Number(CHANEL_ID)) {
     const [userId, answer] = query.data.split('_');
@@ -148,9 +140,8 @@ async function processRequest(chatId, msg, query, type) {
 
     case OrderStatus.NAME: {
       if (type === 'text') {
-        const name = msg.text;
         state.setState(chatId, {
-          name,
+          name: msg.text,
           status: OrderStatus.PHONE,
         });
 
@@ -164,10 +155,9 @@ async function processRequest(chatId, msg, query, type) {
 
 
     case OrderStatus.PHONE: {
-      if (type === 'contact') {
-        const phone = msg.contact.phone_number;
+      if (type === 'text') {
         state.setState(chatId, {
-          phone,
+          phone: msg.text,
           status: OrderStatus.PAYMENT,
         });
 

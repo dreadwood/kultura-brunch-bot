@@ -36,35 +36,22 @@ module.exports = {
   },
 
 
-  phone() {
-    return [
-      [{
-        text: 'оставить номер телефона',
-        request_contact: true,
-      }],
-      // [{
-      //   text: RESET_BUTTON,
-      // }],
-    ];
-  },
-
-
-  chanel(id) {
+  chanel(userId) {
     return [
       [
         {
           text: 'потвердить',
-          callback_data: `${id}_${ChanelCommands.CONFIRM}`,
+          callback_data: `${userId}_${ChanelCommands.CONFIRM}`,
         },
         {
           text: 'не ок',
-          callback_data: `${id}_${ChanelCommands.REPORT}`,
+          callback_data: `${userId}_${ChanelCommands.REPORT}`,
         },
       ],
       [
         {
           text: 'отправить уведомление',
-          callback_data: `${id}_${ChanelCommands.CONFIRM}`,
+          callback_data: `${userId}_${ChanelCommands.CONFIRM}`,
         },
       ],
     ];

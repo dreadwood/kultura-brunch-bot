@@ -6,12 +6,12 @@ module.exports.FEEDBACK = '@dreadwood';
 module.exports.ACOUNT_NAME = 'Bykov Sergei';
 
 module.exports.OrderStatus = {
-  WELCOME: 'WELCOME', // select event
-  LIST: 'LIST',
-  EVENT: 'EVENT',
-  TICKET: 'TICKET',
-  NAME: 'NAME',
-  PHONE: 'PHONE',
+  WELCOME: 'WELCOME', // initional state
+  LIST: 'LIST', // event selection
+  EVENT: 'EVENT', // event info
+  TICKET: 'TICKET', // choosing tickets
+  NAME: 'NAME', // name input
+  PHONE: 'PHONE', // phone input
   PAYMENT: 'PAYMENT', // payment request
   CHECK: 'CHECK', // receipt check
   DONE: 'DONE',

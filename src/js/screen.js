@@ -69,16 +69,17 @@ module.exports = {
 
     bot.sendMessage(chatId, text, {
       reply_markup: {
-        keyboard: keyboard.phone(),
         inline_keyboard: keyboard.reset(),
-        // one_time_keyboard: true,
       },
     });
   },
 
 
   async payment(bot, chatId, event) {
-    const text1 = `Спасибо! Стоимость участия: ${event.price} gel, В цену входит: билет, еда, лекция, эскурсия.\n\nДля брони места необходимо внести 50% от стоимости билета.\nПеревести можно вот сюда (BOG)`;
+    const text1 = `Спасибо! Стоимость участия: ${event.price} gel, В цену входит: билет, еда, лекция, эскурсия.
+
+Для брони места необходимо внести 50% от стоимости билета.
+Перевести можно вот сюда (BOG)`;
     const text2 = `Account number: ${ACCOUNT_NUMBER}`;
     const text3 = `Имя: ${ACOUNT_NAME}`;
     const text4 = 'Отправьте, пожалуйста, чек об оплате.';
