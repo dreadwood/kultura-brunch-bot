@@ -243,7 +243,7 @@ async function processRequest(chatId, msg, query, type) {
         if (msg.text.match(REG_EXP_PHONE)) {
           state.setState(chatId, {
             startSessionTime: Date.now(),
-            phone: msg.text.replace('+', 'plus'),
+            phone: msg.text.replace('+', ''),
             status: OrderStatus.PAYMENT,
           });
 
