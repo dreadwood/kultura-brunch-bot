@@ -25,4 +25,10 @@ module.exports.ChanelCommands = {
 
 module.exports.UserCommands = {
   RESET: 'reset',
+  RETURN_POLICY: 'returnPolicy',
+};
+
+module.exports.Pages = {
+  EVENTS: 'Мероприятия',
+  CLIENTS: 'Заказы',
 };

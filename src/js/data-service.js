@@ -1,7 +1,7 @@
 'use strict';
 
 const {google} = require('googleapis');
-const {Pages} = require('./config');
+const {Pages} = require('./const');
 const {getAuthClient} = require('./google-auth');
 
 const {SPREADSHEET_ID} = process.env;
