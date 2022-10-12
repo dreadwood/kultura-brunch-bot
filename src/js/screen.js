@@ -73,6 +73,13 @@ class Screen {
   ticket(chatId, ticket) {
     const text = `Сколько вам билетов? Отправьте число от 1 до ${ticket}`;
 
+    this._bot.sendMessage(chatId, text);
+  }
+
+
+  ticketMistake(chatId, ticket) {
+    const text = `Сколько вам билетов? Отправьте число от 1 до ${ticket}`;
+
     this._bot.sendMessage(chatId, text, {
       reply_markup: {
         inline_keyboard: keyboard.reset(),
@@ -82,7 +89,14 @@ class Screen {
 
 
   name(chatId, selectedTickets) {
-    const text = `Вы выбрали ${selectedTickets} билетов. Напишите, пожалуйста, ваше имя`;
+    const text = `Вы выбрали ${selectedTickets} билетов. Напишите, пожалуйста, ваше имя.`;
+
+    this._bot.sendMessage(chatId, text);
+  }
+
+
+  nameMistake(chatId) {
+    const text = 'Напишите ваше имя, пожалуйста.';
 
     this._bot.sendMessage(chatId, text, {
       reply_markup: {
@@ -95,11 +109,7 @@ class Screen {
   phone(chatId) {
     const text = 'Для бронирования оставьте свой номер телефона';
 
-    this._bot.sendMessage(chatId, text, {
-      reply_markup: {
-        inline_keyboard: keyboard.reset(),
-      },
-    });
+    this._bot.sendMessage(chatId, text);
   }
 
 

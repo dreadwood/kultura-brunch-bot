@@ -183,7 +183,7 @@ async function processRequest(chatId, msg, query, type) {
         }
 
       } else {
-        screen.ticket(chatId, ticketsOnSale);
+        screen.ticketMistake(chatId, ticketsOnSale);
       }
       break;
     }
@@ -198,8 +198,7 @@ async function processRequest(chatId, msg, query, type) {
 
         screen.phone(chatId);
       } else {
-        const {countTicket} = state.getState(chatId);
-        screen.name(chatId, countTicket);
+        screen.nameMistake(chatId);
       }
       break;
     }
