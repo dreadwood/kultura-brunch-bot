@@ -106,6 +106,17 @@ module.exports = {
   },
 
 
+  async paymentMistake(bot, chatId) {
+    const text = 'Отправьте, пожалуйста, чек об оплате.';
+
+    bot.sendMessage(chatId, text, {
+      reply_markup: {
+        inline_keyboard: keyboard.reset(),
+      },
+    });
+  },
+
+
   check(bot, chatId) {
     const text = 'Спасибо! Мы забронировали за вами места. В ближайшее время мы проверим оплату.';
 

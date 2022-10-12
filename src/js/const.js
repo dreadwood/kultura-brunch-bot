@@ -15,7 +15,6 @@ module.exports.OrderStatus = {
   PHONE: 'PHONE', // phone input
   PAYMENT: 'PAYMENT', // payment request
   CHECK: 'CHECK', // receipt check
-  DONE: 'DONE',
 };
 
 module.exports.ChanelCommands = {

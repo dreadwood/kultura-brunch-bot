@@ -37,7 +37,7 @@ bot.on('callback_query', async (query) => {
       screen.undone(bot, userId);
     }
 
-    state.setState(chatId, {status: OrderStatus.WELCOME});
+    state.setState(userId, {status: OrderStatus.WELCOME});
 
     return;
   }
@@ -189,20 +189,19 @@ async function processRequest(chatId, msg, query, type) {
 
         addClientsData([
           chatId,
-          msg.from.first_name, // first
-          msg.from.last_name, // last
-          msg.from.username, // nick
+          msg.from.first_name,
+          msg.from.last_name,
+          msg.from.username,
           name,
           phone,
-          countTicket, // ticket
+          countTicket,
           '', // payment,
-          new Date().toLocaleString(), // date
-          event.id, // event
+          new Date().toLocaleString(),
+          event.id,
         ]);
 
       } else {
-        const {event} = state.getState(chatId);
-        screen.payment(bot, chatId, event);
+        screen.paymentMistake(bot, chatId);
       }
       break;
     }
@@ -213,12 +212,6 @@ async function processRequest(chatId, msg, query, type) {
       break;
     }
 
-
-    case OrderStatus.DONE: {
-      // screen.done(bot, chatId);
-      // state.setState(chatId, {status: OrderStatus.WELCOME});
-      break;
-    }
 
     default: {
       state.initionlState(chatId);
