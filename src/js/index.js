@@ -4,15 +4,20 @@ const fs = require('fs');
 const path = require('path');
 const TelegramBot = require('node-telegram-bot-api');
 const {OrderStatus, ChanelCommands, UserCommands, REG_EXP_PHONE} = require('./const');
-const {getEventData, addClientsData, getClientsData, getEventsData} = require('./data-service');
-const screen = require('./screen');
 const State = require('./state');
-// const {debug} = require('./utils');
+const screen = require('./screen');
+const {
+  getEventData,
+  addClientsData,
+  getClientsData,
+  getEventsData,
+} = require('./data-service');
 
 const {BOT_TOKEN, CHANEL_ID} = process.env;
-const bot = new TelegramBot(BOT_TOKEN, {polling: true});
 
+const bot = new TelegramBot(BOT_TOKEN, {polling: true});
 const state = new State();
+
 
 bot.on('message', (msg, metadata) => {
   const chatId = msg.chat.id;
@@ -30,16 +35,19 @@ bot.on('callback_query', async (query) => {
 
   if (chatId === Number(CHANEL_ID)) {
     const [userId, answer] = query.data.split('_');
+    const userState = state.getState(chatId);
 
-    if (answer === ChanelCommands.CONFIRM) {
-      screen.done(bot, userId);
+    if (userState && userState.status === OrderStatus.CHECK) {
+      if (answer === ChanelCommands.CONFIRM) {
+        screen.done(bot, userId);
+      }
+
+      if (answer === ChanelCommands.REPORT) {
+        screen.undone(bot, userId);
+      }
+
+      state.setState(userId, {status: OrderStatus.WELCOME});
     }
-
-    if (answer === ChanelCommands.REPORT) {
-      screen.undone(bot, userId);
-    }
-
-    state.setState(userId, {status: OrderStatus.WELCOME});
 
     return;
   }
