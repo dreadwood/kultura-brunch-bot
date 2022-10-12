@@ -1,7 +1,7 @@
 'use strict';
 
 const TelegramBot = require('node-telegram-bot-api');
-const {OrderStatus, ChanelCommands, UserCommands} = require('./const');
+const {OrderStatus, ChanelCommands, UserCommands, REG_EXP_PHONE} = require('./const');
 const {getEventData, addClientsData, getClientsData, getEventsData} = require('./data-service');
 const screen = require('./screen');
 const State = require('./state');
@@ -156,13 +156,19 @@ async function processRequest(chatId, msg, query, type) {
 
     case OrderStatus.PHONE: {
       if (type === 'text') {
-        state.setState(chatId, {
-          phone: msg.text,
-          status: OrderStatus.PAYMENT,
-        });
 
-        const {event} = state.getState(chatId);
-        screen.payment(bot, chatId, event);
+        if (msg.text.match(REG_EXP_PHONE)) {
+          state.setState(chatId, {
+            phone: msg.text.replace('+', 'plus'),
+            status: OrderStatus.PAYMENT,
+          });
+
+          const {event} = state.getState(chatId);
+          screen.payment(bot, chatId, event);
+        } else {
+          screen.phoneMistake(bot, chatId);
+        }
+
       } else {
         screen.phone(bot, chatId);
       }

@@ -2,8 +2,9 @@
 
 module.exports.SCOPES = 'https://www.googleapis.com/auth/spreadsheets';
 module.exports.CREDENTIALS_FILE = 'credentials.json';
-module.exports.FEEDBACK = '@dreadwood';
+module.exports.FEEDBACK = '@ellyprohorova';
 module.exports.ACOUNT_NAME = 'Bykov Sergei';
+module.exports.REG_EXP_PHONE = /^[\d\s\-()+]+$/;
 
 module.exports.OrderStatus = {
   WELCOME: 'WELCOME', // initional state

@@ -75,6 +75,17 @@ module.exports = {
   },
 
 
+  phoneMistake(bot, chatId) {
+    const text = 'Оставьте контактный номер телефона (допускаються цифры, пробел и символы "+", "-", "(", ")")';
+
+    bot.sendMessage(chatId, text, {
+      reply_markup: {
+        inline_keyboard: keyboard.reset(),
+      },
+    });
+  },
+
+
   async payment(bot, chatId, event) {
     const text1 = `Спасибо! Стоимость участия: ${event.price} gel, В цену входит: билет, еда, лекция, эскурсия.
 
@@ -117,19 +128,15 @@ module.exports = {
 
 
   async chanel(bot, chanelId, msg, stateUser) {
-    const {message_id, from: {id, first_name, last_name, username}} = msg;
-    const {name, phone, countTicket} = stateUser;
+    const {message_id, from: {id, username}} = msg;
+    const {event, name, phone, countTicket} = stateUser;
 
-    /* eslint-disable camelcase */
     const text = `Имя: ${name}
+username: ${username}
 phone: ${phone}
 ticket: ${countTicket}
-id: ${id}
-
-first name: ${first_name}
-last name: ${last_name || ''}
-username: ${username}`;
-    /* eslint-enable camelcase */
+event: ${event.id}
+`;
 
     await bot.forwardMessage(chanelId, id, message_id);
     await bot.sendMessage(chanelId, text, {
