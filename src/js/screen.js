@@ -4,23 +4,38 @@ const {FEEDBACK, ACOUNT_NAME} = require('./const');
 const keyboard = require('./keyboard');
 const {ACCOUNT_NUMBER} = process.env;
 
+class Screen {
+  constructor(bot) {
+    this._bot = bot;
+  }
 
-module.exports = {
-  async welcome(bot, chatId, event) {
+
+  welcome(chatId, events) {
     const text = 'Здравствуйте!\nНа какую встречу вы хотите записаться?';
 
-    bot.sendMessage(chatId, text, {
+    this._bot.sendMessage(chatId, text, {
       reply_markup: {
-        inline_keyboard: keyboard.welcome(event),
+        inline_keyboard: keyboard.welcome(events),
       },
     });
-  },
+  }
 
 
-  async eventWithPoster(bot, chatId, event, posterPath) {
+  userListMistake(chatId, events) {
+    const text = 'Выберете встречу для записи.';
+
+    this._bot.sendMessage(chatId, text, {
+      reply_markup: {
+        inline_keyboard: keyboard.welcome(events),
+      },
+    });
+  }
+
+
+  eventWithPoster(chatId, event, posterPath) {
     const text = event.description;
 
-    bot.sendPhoto(chatId, posterPath, {
+    this._bot.sendPhoto(chatId, posterPath, {
       caption: text,
       reply_markup: {
         inline_keyboard: keyboard.event(event.id),
@@ -29,125 +44,154 @@ module.exports = {
       filename: event.poster,
       contentType: 'image/*',
     });
-  },
+  }
 
-  async event(bot, chatId, event) {
+
+  event(chatId, event) {
     const text = event.description;
 
-    bot.sendMessage(chatId, text, {
+    this._bot.sendMessage(chatId, text, {
       caption: text,
       reply_markup: {
         inline_keyboard: keyboard.event(event.id),
       },
     });
-  },
+  }
 
 
-  eventMistake(bot, chatId) {
+  eventMistake(chatId) {
     const text = 'Хотите выбрать другое мероприятие?';
 
-    bot.sendMessage(chatId, text, {
+    this._bot.sendMessage(chatId, text, {
       reply_markup: {
         inline_keyboard: keyboard.reset(),
       },
     });
-  },
+  }
 
 
-  ticket(bot, chatId, ticket) {
+  ticket(chatId, ticket) {
     const text = `Сколько вам билетов? Отправьте число от 1 до ${ticket}`;
 
-    bot.sendMessage(chatId, text, {
+    this._bot.sendMessage(chatId, text, {
       reply_markup: {
         inline_keyboard: keyboard.reset(),
       },
     });
-  },
+  }
 
 
-  name(bot, chatId, selectedTickets) {
+  name(chatId, selectedTickets) {
     const text = `Вы выбрали ${selectedTickets} билетов. Напишите, пожалуйста, ваше имя`;
 
-    bot.sendMessage(chatId, text, {
+    this._bot.sendMessage(chatId, text, {
       reply_markup: {
         inline_keyboard: keyboard.reset(),
       },
     });
-  },
+  }
 
 
-  phone(bot, chatId) {
+  phone(chatId) {
     const text = 'Для бронирования оставьте свой номер телефона';
 
-    bot.sendMessage(chatId, text, {
+    this._bot.sendMessage(chatId, text, {
       reply_markup: {
         inline_keyboard: keyboard.reset(),
       },
     });
-  },
+  }
 
 
-  phoneMistake(bot, chatId) {
+  phoneMistake(chatId) {
     const text = 'Оставьте контактный номер телефона (допускаються цифры, пробел и символы "+", "-", "(", ")")';
 
-    bot.sendMessage(chatId, text, {
+    this._bot.sendMessage(chatId, text, {
       reply_markup: {
         inline_keyboard: keyboard.reset(),
       },
     });
-  },
+  }
 
 
-  async payment(bot, chatId, event) {
-    const text1 = event.infopay;
-    const text2 = `Account number: ${ACCOUNT_NUMBER}`;
-    const text3 = `Имя: ${ACOUNT_NAME}`;
-    const text4 = 'Отправьте, пожалуйста, чек об оплате.';
+  async payment(chatId, event) {
+    const textInfoPay = `${event.infopay}\nAccount number / Name:`;
+    const textRequestReceipt = 'Отправьте, пожалуйста, чек об оплате.';
 
-    await bot.sendMessage(chatId, text1);
-    await bot.sendMessage(chatId, text2);
-    await bot.sendMessage(chatId, text3);
-    bot.sendMessage(chatId, text4, {
+    await this._bot.sendMessage(chatId, textInfoPay);
+    await this._bot.sendMessage(chatId, ACCOUNT_NUMBER);
+    await this._bot.sendMessage(chatId, ACOUNT_NAME);
+    this._bot.sendMessage(chatId, textRequestReceipt, {
       reply_markup: {
-        inline_keyboard: keyboard.reset(),
+        inline_keyboard: keyboard.payment(),
       },
     });
-  },
+  }
 
 
-  async paymentMistake(bot, chatId) {
+  paymentMistake(chatId) {
     const text = 'Отправьте, пожалуйста, чек об оплате.';
 
-    bot.sendMessage(chatId, text, {
+    this._bot.sendMessage(chatId, text, {
+      reply_markup: {
+        inline_keyboard: keyboard.payment(),
+      },
+    });
+  }
+
+
+  userReturnPolicy(chatId) {
+    const text = `Правила отмены:\n
+Если ваши планы поменялись,  более, чем за 2 дня (48 ч) до мероприятия, то мы вернем полностью всю ранее внесенную сумму.\n
+Если ваши планы изменились  менее, чем за 2 дня (48 ч)  до встречи, то мы вернем 50%  от стоимости билета.\n
+При отмене в день мероприятия,  оплата не возвращается.\n
+💫 Если у вас остались вопросы по возврату свяжитесь с ${FEEDBACK}`;
+
+    this._bot.sendMessage(chatId, text, {
       reply_markup: {
         inline_keyboard: keyboard.reset(),
       },
     });
-  },
+  }
 
-
-  check(bot, chatId) {
+  check(chatId) {
     const text = 'Спасибо! Мы забронировали за вами места. В ближайшее время мы проверим оплату.';
 
-    bot.sendMessage(chatId, text);
-  },
+    this._bot.sendMessage(chatId, text);
+  }
 
 
-  done(bot, chatId) {
-    const text = 'Поздравляем оплата прошла. Мы ждем вас [дополнительная информация].';
+  checkMistake(chatId) {
+    const text = 'Мы сейчас проверим чек и отправим вам потвержедние.';
 
-    bot.sendMessage(chatId, text);
-  },
+    this._bot.sendMessage(chatId, text);
+  }
 
 
-  undone(bot, chatId) {
+  done(chatId) {
+    const text = 'Поздравляем оплата прошла. Будем ждать вас на мероприятии.';
+
+    this._bot.sendMessage(chatId, text);
+  }
+
+
+  undone(chatId) {
     const text = `Почему-то мы не видем вашей оплаты. Прошу связаться с ${FEEDBACK}`;
 
-    bot.sendMessage(chatId, text);
-  },
+    this._bot.sendMessage(chatId, text);
+  }
 
 
-  async chanel(bot, chanelId, msg, stateUser) {
+  userNoticeEvent(chatId, event) {
+    const text = event.notice;
+
+    this._bot.sendMessage(chatId, text, {
+      disable_web_page_preview: true,
+    });
+  }
+
+
+  async chanelReceipt(chanelId, msg, stateUser) {
     const {message_id, from: {id, username}} = msg;
     const {event, name, phone, countTicket} = stateUser;
 
@@ -158,11 +202,34 @@ ticket: ${countTicket}
 event: ${event.id}
 `;
 
-    await bot.forwardMessage(chanelId, id, message_id);
-    await bot.sendMessage(chanelId, text, {
+    await this._bot.forwardMessage(chanelId, id, message_id);
+    this._bot.sendMessage(chanelId, text, {
       reply_markup: {
-        inline_keyboard: keyboard.chanel(id),
+        inline_keyboard: keyboard.chanel(id, event.id),
       },
     });
-  },
-};
+  }
+
+
+  chanelBadRequest(chanelId) {
+    const text = 'Клавиши потверждения или отмены уже не актуальны';
+
+    this._bot.sendMessage(chanelId, text);
+  }
+
+
+  chanelUserHasNoOrders(chanelId) {
+    const text = 'Этот человек почему-то ничего не приобретал. Посмотрите таблицу.';
+
+    this._bot.sendMessage(chanelId, text);
+  }
+
+
+  chanelNoEvent(chanelId) {
+    const text = 'Невозможно найти такое событие. Проверте id event.';
+
+    this._bot.sendMessage(chanelId, text);
+  }
+}
+
+module.exports = Screen;

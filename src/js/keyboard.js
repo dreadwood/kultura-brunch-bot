@@ -36,22 +36,40 @@ module.exports = {
   },
 
 
-  chanel(userId) {
+  payment() {
+    return [
+      [
+        {
+          text: 'правила возврата',
+          callback_data: UserCommands.RETURN_POLICY,
+        },
+      ],
+      [
+        {
+          text: RESET_BUTTON_TEXT,
+          callback_data: UserCommands.RESET,
+        },
+      ],
+    ];
+  },
+
+
+  chanel(userId, eventId) {
     return [
       [
         {
           text: 'потвердить',
-          callback_data: `${userId}_${ChanelCommands.CONFIRM}`,
+          callback_data: `${userId}_${eventId}_${ChanelCommands.CONFIRM}`,
         },
         {
           text: 'не ок',
-          callback_data: `${userId}_${ChanelCommands.REPORT}`,
+          callback_data: `${userId}_${eventId}_${ChanelCommands.REPORT}`,
         },
       ],
       [
         {
           text: 'отправить уведомление',
-          callback_data: `${userId}_${ChanelCommands.CONFIRM}`,
+          callback_data: `${userId}_${eventId}_${ChanelCommands.NOTICE}`,
         },
       ],
     ];

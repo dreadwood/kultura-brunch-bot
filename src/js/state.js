@@ -14,6 +14,7 @@ class State {
       countTicket: null,
       ticketsOnSale: null,
       event: null,
+      events: [],
       status: OrderStatus.WELCOME,
     };
   }

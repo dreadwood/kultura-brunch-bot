@@ -3,9 +3,14 @@
 const fs = require('fs');
 const path = require('path');
 const TelegramBot = require('node-telegram-bot-api');
-const {OrderStatus, ChanelCommands, UserCommands, REG_EXP_PHONE} = require('./const');
 const State = require('./state');
-const screen = require('./screen');
+const Screen = require('./screen');
+const {
+  OrderStatus,
+  ChanelCommands,
+  UserCommands,
+  REG_EXP_PHONE,
+} = require('./const');
 const {
   getEventData,
   addClientsData,
@@ -17,6 +22,7 @@ const {BOT_TOKEN, CHANEL_ID} = process.env;
 
 const bot = new TelegramBot(BOT_TOKEN, {polling: true});
 const state = new State();
+const screen = new Screen(bot);
 
 
 bot.on('message', (msg, metadata) => {
@@ -34,21 +40,42 @@ bot.on('callback_query', async (query) => {
   const chatId = query.message.chat.id;
 
   if (chatId === Number(CHANEL_ID)) {
-    const [userId, answer] = query.data.split('_');
-    const userState = state.getState(chatId);
+    const [userId, eventId, command] = query.data.split('_');
+    const userState = state.getState(userId);
 
-    if (userState && userState.status === OrderStatus.CHECK) {
-      if (answer === ChanelCommands.CONFIRM) {
-        screen.done(bot, userId);
+    if (userState?.status === OrderStatus.CHECK) {
+      if (command === ChanelCommands.CONFIRM) {
+        screen.done(userId);
       }
 
-      if (answer === ChanelCommands.REPORT) {
-        screen.undone(bot, userId);
+      if (command === ChanelCommands.REPORT) {
+        screen.undone(userId);
       }
 
       state.setState(userId, {status: OrderStatus.WELCOME});
+      return;
     }
 
+    if (command === ChanelCommands.NOTICE) {
+      const orders = await getClientsData();
+      const userOrders = orders.filter((order) => order.user_id === userId && order.event_id === eventId);
+
+      if (userOrders.length === 0) {
+        screen.chanelUserHasNoOrders(CHANEL_ID);
+      } else {
+        const event = await getEventData(eventId);
+
+        if (event) {
+          screen.userNoticeEvent(userId, event);
+        } else {
+          screen.chanelNoEvent(CHANEL_ID);
+        }
+
+      }
+      return;
+    }
+
+    screen.chanelBadRequest(CHANEL_ID);
     return;
   }
 
@@ -68,10 +95,14 @@ async function processRequest(chatId, msg, query, type) {
 
   switch (status) {
     case OrderStatus.WELCOME: {
-      const event = await getEventsData();
-      screen.welcome(bot, chatId, event);
+      const events = await getEventsData();
 
-      state.setState(chatId, {status: OrderStatus.LIST});
+      state.setState(chatId, {
+        events,
+        status: OrderStatus.LIST,
+      });
+
+      screen.welcome(chatId, events);
       break;
     }
 
@@ -94,11 +125,14 @@ async function processRequest(chatId, msg, query, type) {
         const posterPath = path.join(__dirname, '..', 'img', event.poster);
 
         if (event.poster && fs.existsSync(posterPath)) {
-          screen.eventWithPoster(bot, chatId, event, posterPath);
+          screen.eventWithPoster(chatId, event, posterPath);
         } else {
-          screen.event(bot, chatId, event);
+          screen.event(chatId, event);
         }
 
+      } else {
+        const {events} = state.getState(chatId);
+        screen.userListMistake(chatId, events);
       }
       break;
     }
@@ -109,7 +143,7 @@ async function processRequest(chatId, msg, query, type) {
         const {event} = state.getState(chatId);
         const orders = await getClientsData();
 
-        const ordersEvent = orders.filter((order) => order.event === event.id);
+        const ordersEvent = orders.filter((order) => order.event_id === event.id);
         const ticketsOnSale = ordersEvent.reduce(
           (acc, order) => (acc -= Number(order.ticket)),
           Number(event.capacity),
@@ -120,13 +154,13 @@ async function processRequest(chatId, msg, query, type) {
           return;
         }
 
-        screen.ticket(bot, chatId, ticketsOnSale);
+        screen.ticket(chatId, ticketsOnSale);
         state.setState(chatId, {
           ticketsOnSale,
           status: OrderStatus.TICKET,
         });
       } else {
-        screen.eventMistake(bot, chatId);
+        screen.eventMistake(chatId);
       }
       break;
     }
@@ -139,9 +173,9 @@ async function processRequest(chatId, msg, query, type) {
       if (type === 'text' && !isNaN(enterNumber)) {
 
         if (enterNumber > ticketsOnSale || enterNumber < 1) {
-          screen.ticket(bot, chatId, ticketsOnSale);
+          screen.ticket(chatId, ticketsOnSale);
         } else {
-          screen.name(bot, chatId, enterNumber);
+          screen.name(chatId, enterNumber);
           state.setState(chatId, {
             countTicket: enterNumber,
             status: OrderStatus.NAME,
@@ -149,7 +183,7 @@ async function processRequest(chatId, msg, query, type) {
         }
 
       } else {
-        screen.ticket(bot, chatId, ticketsOnSale);
+        screen.ticket(chatId, ticketsOnSale);
       }
       break;
     }
@@ -162,10 +196,10 @@ async function processRequest(chatId, msg, query, type) {
           status: OrderStatus.PHONE,
         });
 
-        screen.phone(bot, chatId);
+        screen.phone(chatId);
       } else {
         const {countTicket} = state.getState(chatId);
-        screen.name(bot, chatId, countTicket);
+        screen.name(chatId, countTicket);
       }
       break;
     }
@@ -181,28 +215,34 @@ async function processRequest(chatId, msg, query, type) {
           });
 
           const {event} = state.getState(chatId);
-          screen.payment(bot, chatId, event);
+          screen.payment(chatId, event);
         } else {
-          screen.phoneMistake(bot, chatId);
+          screen.phoneMistake(chatId);
         }
 
       } else {
-        screen.phone(bot, chatId);
+        screen.phone(chatId);
       }
       break;
     }
 
 
     case OrderStatus.PAYMENT: {
+      console.log(type);
+      if (type === 'callback_query' && query.data === UserCommands.RETURN_POLICY) {
+        screen.userReturnPolicy(chatId);
+        return;
+      }
+
       // добавить таймер для оплаты (10 минут), если не успел отправляет сообщение
       // добавить статус "времено забронено"
       if (type === 'photo' || type === 'document') {
-        screen.check(bot, chatId);
+        screen.check(chatId);
         state.setState(chatId, {status: OrderStatus.CHECK});
 
         const stateUser = state.getState(chatId);
         const {event, name, phone, countTicket} = stateUser;
-        screen.chanel(bot, CHANEL_ID, msg, stateUser);
+        screen.chanelReceipt(CHANEL_ID, msg, stateUser);
 
         addClientsData([
           chatId,
@@ -217,22 +257,16 @@ async function processRequest(chatId, msg, query, type) {
           event.id,
         ]);
 
-      } else {
-        screen.paymentMistake(bot, chatId);
+        return;
       }
+
+      screen.paymentMistake(chatId);
       break;
     }
 
 
     case OrderStatus.CHECK: {
-      bot.sendMessage(chatId, 'Мы сейчас проверим чек и отправим вам потвержедние');
-      break;
-    }
-
-
-    default: {
-      state.initionlState(chatId);
-      screen.welcome(bot, chatId);
+      screen.checkMistake(chatId);
       break;
     }
   }
