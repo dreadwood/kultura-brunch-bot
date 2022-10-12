@@ -12,6 +12,7 @@ class State {
       name: null,
       phone: null,
       countTicket: null,
+      ticketsOnSale: null,
       event: null,
       status: OrderStatus.WELCOME,
     };

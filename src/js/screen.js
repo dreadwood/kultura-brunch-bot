@@ -1,138 +1,140 @@
-/* eslint-disable camelcase */
 'use strict';
 
 const path = require('path');
-const {getEventsData} = require('./data-service');
-const {getEventListKeyboard} = require('./keyboard');
-const {welcomeText, getPaymentTemplate, getAccountOwnerTempale, getAccountNumberTempale, getRequestReceipTempale, getEventTempale} = require('./templates');
-
-
-async function welcomeScreen(bot, chatId) {
-  const eventsData = await getEventsData();
-  const keyboard = getEventListKeyboard(eventsData);
-
-  bot.sendMessage(chatId, welcomeText, {
-    reply_markup: {
-      inline_keyboard: keyboard,
-    },
-  });
-}
-
-
-async function eventScreen(bot, chatId, event) {
-  const eventText = getEventTempale(event);
-  const posterPath = path.join(__dirname, '..', 'img', event.poster);
-
-  await bot.sendPhoto(chatId, posterPath, {
-    caption: eventText,
-    reply_markup: {
-      inline_keyboard: [
-        [
-          {
-            text: 'купить билиет',
-            callback_data: event.id,
-          },
-        ],
-        [
-          {
-            text: 'вернуться назад',
-            callback_data: 'inition_state',
-          },
-        ],
-      ],
-    },
-  });
-}
-
-
-function ticketScreen(bot, chatId, ticket) {
-  bot.sendMessage(chatId, `Сколько вам билетов? Отправте число от 1 до ${ticket}`);
-}
-
-
-function nameScreen(bot, chatId, selectedTickets) {
-  bot.sendMessage(chatId, `Вы выбрали ${selectedTickets} билетов. Напишите, пожалуйста, ваше имя`);
-}
-
-
-function phoneScreen(bot, chatId) {
-  bot.sendMessage(chatId, 'Для бронирования оставьте свой номер телефона', {
-    reply_markup: {
-      keyboard: [
-        [{
-          text: 'оставить номер телефона',
-          request_contact: true,
-        }],
-        [{
-          text: 'вернуться назад',
-          callback_data: 'inition_state',
-        }],
-      ],
-      one_time_keyboard: true,
-    },
-  });
-}
-
-
-async function paymentScreen(bot, chatId, event) {
-  await bot.sendMessage(chatId, getPaymentTemplate(event.price, event.prepayment));
-  await bot.sendMessage(chatId, getAccountNumberTempale());
-  await bot.sendMessage(chatId, getAccountOwnerTempale());
-  bot.sendMessage(chatId, getRequestReceipTempale());
-}
-
-
-function checkScreen(bot, chatId) {
-  bot.sendMessage(chatId, 'Спасибо! Мы забронировали за вами места. В ближайшее время мы проверим оплату.');
-}
-
-function doneScreen(bot, chatId) {
-  bot.sendMessage(chatId, 'Поздравляем оплата прошла. Мы ждем вас [дополнительная информация].');
-}
-
-function undoneScreen(bot, chatId) {
-  bot.sendMessage(chatId, 'Почему-то мы не видем вашей оплаты. Прошу связаться с @dreadwood');
-}
-
-async function chanelScreen(bot, chanelId, msg, stateUser) {
-  const {message_id, from: {id, first_name, last_name, username}} = msg;
-  const {name, phone, countTicket} = stateUser;
-
-  await bot.forwardMessage(chanelId, id, message_id);
-  await bot.sendMessage(chanelId, `${name}\n${phone}
-Колличество билетов: ${countTicket}`);
-
-  await bot.sendMessage(chanelId, `id: ${id}
-first name: ${first_name}
-last name: ${last_name || ''}
-username: ${username}`, {
-    reply_markup: {
-      inline_keyboard: [
-        [
-          {
-            text: 'потвердить',
-            callback_data: 1,
-          },
-          {
-            text: 'не ок',
-            callback_data: 0,
-          },
-        ],
-      ],
-    },
-  });
-}
+const {FEEDBACK, ACOUNT_NAME} = require('./const');
+const keyboard = require('./keyboard');
+const {ACCOUNT_NUMBER} = process.env;
 
 
 module.exports = {
-  welcomeScreen,
-  eventScreen,
-  ticketScreen,
-  nameScreen,
-  phoneScreen,
-  paymentScreen,
-  checkScreen,
-  doneScreen,
-  undoneScreen,
-  chanelScreen,
+  async welcome(bot, chatId, event) {
+    const text = 'Здравствуйте!\nНа какую встречу вы хотите записаться?';
+
+    bot.sendMessage(chatId, text, {
+      reply_markup: {
+        inline_keyboard: keyboard.welcome(event),
+      },
+    });
+  },
+
+
+  async event(bot, chatId, event) {
+    const text = event.description;
+    const posterPath = path.join(__dirname, '..', 'img', event.poster);
+
+    await bot.sendPhoto(chatId, posterPath, {
+      caption: text,
+      reply_markup: {
+        inline_keyboard: keyboard.event(event.id),
+      },
+    });
+  },
+
+
+  eventMistake(bot, chatId) {
+    const text = 'Хотите выбрать другое мероприятие?';
+
+    bot.sendMessage(chatId, text, {
+      reply_markup: {
+        inline_keyboard: keyboard.reset(),
+      },
+    });
+  },
+
+
+  ticket(bot, chatId, ticket) {
+    const text = `Сколько вам билетов? Отправьте число от 1 до ${ticket}`;
+
+    bot.sendMessage(chatId, text, {
+      reply_markup: {
+        inline_keyboard: keyboard.reset(),
+      },
+    });
+  },
+
+
+  name(bot, chatId, selectedTickets) {
+    const text = `Вы выбрали ${selectedTickets} билетов. Напишите, пожалуйста, ваше имя`;
+
+    bot.sendMessage(chatId, text, {
+      reply_markup: {
+        inline_keyboard: keyboard.reset(),
+      },
+    });
+  },
+
+
+  phone(bot, chatId) {
+    const text = 'Для бронирования оставьте свой номер телефона';
+
+    bot.sendMessage(chatId, text, {
+      reply_markup: {
+        keyboard: keyboard.phone(),
+        inline_keyboard: keyboard.reset(),
+        // one_time_keyboard: true,
+      },
+    });
+  },
+
+
+  async payment(bot, chatId, event) {
+    const text1 = `Спасибо! Стоимость участия: ${event.price} gel, В цену входит: билет, еда, лекция, эскурсия.\n\nДля брони места необходимо внести 50% от стоимости билета.\nПеревести можно вот сюда (BOG)`;
+    const text2 = `Account number: ${ACCOUNT_NUMBER}`;
+    const text3 = `Имя: ${ACOUNT_NAME}`;
+    const text4 = 'Отправьте, пожалуйста, чек об оплате.';
+
+    await bot.sendMessage(chatId, text1);
+    await bot.sendMessage(chatId, text2);
+    await bot.sendMessage(chatId, text3);
+    bot.sendMessage(chatId, text4, {
+      reply_markup: {
+        inline_keyboard: keyboard.reset(),
+      },
+    });
+  },
+
+
+  check(bot, chatId) {
+    const text = 'Спасибо! Мы забронировали за вами места. В ближайшее время мы проверим оплату.';
+
+    bot.sendMessage(chatId, text);
+  },
+
+
+  done(bot, chatId) {
+    const text = 'Поздравляем оплата прошла. Мы ждем вас [дополнительная информация].';
+
+    bot.sendMessage(chatId, text);
+  },
+
+
+  undone(bot, chatId) {
+    const text = `Почему-то мы не видем вашей оплаты. Прошу связаться с ${FEEDBACK}`;
+
+    bot.sendMessage(chatId, text);
+  },
+
+
+  async chanel(bot, chanelId, msg, stateUser) {
+    const {message_id, from: {id, first_name, last_name, username}} = msg;
+    const {name, phone, countTicket} = stateUser;
+
+    /* eslint-disable camelcase */
+    const text = `Имя: ${name}
+phone: ${phone}
+ticket: ${countTicket}
+id: ${id}
+
+first name: ${first_name}
+last name: ${last_name || ''}
+username: ${username}`;
+    /* eslint-enable camelcase */
+
+    await bot.forwardMessage(chanelId, id, message_id);
+    await bot.sendMessage(chanelId, text, {
+      reply_markup: {
+        inline_keyboard: keyboard.chanel(id),
+      },
+    });
+  },
 };
