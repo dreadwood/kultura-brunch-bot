@@ -59,6 +59,13 @@ class Screen {
   }
 
 
+  userEventNotFound(chatId) {
+    const text = 'К сожалению, такого мероприятия нет.';
+
+    this._bot.sendMessage(chatId, text);
+  }
+
+
   eventMistake(chatId) {
     const text = 'Хотите выбрать другое мероприятие?';
 
@@ -70,21 +77,24 @@ class Screen {
   }
 
 
-  ticket(chatId, ticket) {
+  userTicket(chatId, ticket) {
     const text = `Сколько вам билетов? Отправьте число от 1 до ${ticket}`;
 
     this._bot.sendMessage(chatId, text);
   }
 
 
-  ticketMistake(chatId, ticket) {
-    const text = `Сколько вам билетов? Отправьте число от 1 до ${ticket}`;
+  userTicketSoldOut(chatId) {
+    const text = 'К сожалению, на это мероприятие билетов больше нет';
 
-    this._bot.sendMessage(chatId, text, {
-      reply_markup: {
-        inline_keyboard: keyboard.reset(),
-      },
-    });
+    this._bot.sendMessage(chatId, text);
+  }
+
+
+  userTicketSoMany(chatId, ticket) {
+    const text = `К сожалению, столько билетов на это мероприятие нет. Отправьте число от 1 до ${ticket}`;
+
+    this._bot.sendMessage(chatId, text);
   }
 
 
@@ -98,11 +108,7 @@ class Screen {
   nameMistake(chatId) {
     const text = 'Напишите ваше имя, пожалуйста.';
 
-    this._bot.sendMessage(chatId, text, {
-      reply_markup: {
-        inline_keyboard: keyboard.reset(),
-      },
-    });
+    this._bot.sendMessage(chatId, text);
   }
 
 
@@ -116,11 +122,7 @@ class Screen {
   phoneMistake(chatId) {
     const text = 'Оставьте контактный номер телефона (допускаються цифры, пробел и символы "+", "-", "(", ")")';
 
-    this._bot.sendMessage(chatId, text, {
-      reply_markup: {
-        inline_keyboard: keyboard.reset(),
-      },
-    });
+    this._bot.sendMessage(chatId, text);
   }
 
 
@@ -157,11 +159,7 @@ class Screen {
 При отмене в день мероприятия,  оплата не возвращается.\n
 💫 Если у вас остались вопросы по возврату свяжитесь с ${FEEDBACK}`;
 
-    this._bot.sendMessage(chatId, text, {
-      reply_markup: {
-        inline_keyboard: keyboard.reset(),
-      },
-    });
+    this._bot.sendMessage(chatId, text);
   }
 
   check(chatId) {
@@ -179,7 +177,7 @@ class Screen {
 
 
   done(chatId) {
-    const text = 'Поздравляем оплата прошла. Будем ждать вас на мероприятии.';
+    const text = 'Поздравляем, оплата прошла. Будем ждать вас на мероприятии.';
 
     this._bot.sendMessage(chatId, text);
   }

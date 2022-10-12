@@ -44,12 +44,6 @@ module.exports = {
           callback_data: UserCommands.RETURN_POLICY,
         },
       ],
-      [
-        {
-          text: RESET_BUTTON_TEXT,
-          callback_data: UserCommands.RESET,
-        },
-      ],
     ];
   },
 

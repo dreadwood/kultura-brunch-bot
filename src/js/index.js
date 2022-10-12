@@ -24,6 +24,11 @@ const bot = new TelegramBot(BOT_TOKEN, {polling: true});
 const state = new State();
 const screen = new Screen(bot);
 
+bot.setMyCommands([{
+  command: 'start',
+  description: 'Выбрать мероприятие',
+}]);
+
 
 bot.on('message', (msg, metadata) => {
   const chatId = msg.chat.id;
@@ -113,7 +118,7 @@ async function processRequest(chatId, msg, query, type) {
         const event = await getEventData(eventId);
 
         if (!event) {
-          bot.sendMessage(chatId, 'К сожалению, такого мероприятия нет.');
+          screen.userEventNotFound(chatId);
           return;
         }
 
@@ -150,11 +155,11 @@ async function processRequest(chatId, msg, query, type) {
         );
 
         if (ticketsOnSale <= 0) {
-          bot.sendMessage(chatId, 'К сожалению, на это мероприятие билетов больше нет');
+          screen.userTicketSoldOut(chatId);
           return;
         }
 
-        screen.ticket(chatId, ticketsOnSale);
+        screen.userTicket(chatId, ticketsOnSale);
         state.setState(chatId, {
           ticketsOnSale,
           status: OrderStatus.TICKET,
@@ -173,7 +178,7 @@ async function processRequest(chatId, msg, query, type) {
       if (type === 'text' && !isNaN(enterNumber)) {
 
         if (enterNumber > ticketsOnSale || enterNumber < 1) {
-          screen.ticket(chatId, ticketsOnSale);
+          screen.userTicketSoMany(chatId, ticketsOnSale);
         } else {
           screen.name(chatId, enterNumber);
           state.setState(chatId, {
@@ -183,7 +188,7 @@ async function processRequest(chatId, msg, query, type) {
         }
 
       } else {
-        screen.ticketMistake(chatId, ticketsOnSale);
+        screen.userTicket(chatId, ticketsOnSale);
       }
       break;
     }
@@ -227,7 +232,6 @@ async function processRequest(chatId, msg, query, type) {
 
 
     case OrderStatus.PAYMENT: {
-      console.log(type);
       if (type === 'callback_query' && query.data === UserCommands.RETURN_POLICY) {
         screen.userReturnPolicy(chatId);
         return;
