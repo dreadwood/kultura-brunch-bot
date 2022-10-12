@@ -1,6 +1,5 @@
 'use strict';
 
-const path = require('path');
 const {FEEDBACK, ACOUNT_NAME} = require('./const');
 const keyboard = require('./keyboard');
 const {ACCOUNT_NUMBER} = process.env;
@@ -18,11 +17,24 @@ module.exports = {
   },
 
 
+  async eventWithPoster(bot, chatId, event, posterPath) {
+    const text = event.description;
+
+    bot.sendPhoto(chatId, posterPath, {
+      caption: text,
+      reply_markup: {
+        inline_keyboard: keyboard.event(event.id),
+      },
+    }, {
+      filename: event.poster,
+      contentType: 'image/*',
+    });
+  },
+
   async event(bot, chatId, event) {
     const text = event.description;
-    const posterPath = path.join(__dirname, '..', 'img', event.poster);
 
-    await bot.sendPhoto(chatId, posterPath, {
+    bot.sendMessage(chatId, text, {
       caption: text,
       reply_markup: {
         inline_keyboard: keyboard.event(event.id),
@@ -87,10 +99,7 @@ module.exports = {
 
 
   async payment(bot, chatId, event) {
-    const text1 = `Спасибо! Стоимость участия: ${event.price} gel, В цену входит: билет, еда, лекция, эскурсия.
-
-Для брони места необходимо внести 50% от стоимости билета.
-Перевести можно вот сюда (BOG)`;
+    const text1 = event.infopay;
     const text2 = `Account number: ${ACCOUNT_NUMBER}`;
     const text3 = `Имя: ${ACOUNT_NAME}`;
     const text4 = 'Отправьте, пожалуйста, чек об оплате.';

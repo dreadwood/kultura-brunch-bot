@@ -1,5 +1,7 @@
 'use strict';
 
+const fs = require('fs');
+const path = require('path');
 const TelegramBot = require('node-telegram-bot-api');
 const {OrderStatus, ChanelCommands, UserCommands, REG_EXP_PHONE} = require('./const');
 const {getEventData, addClientsData, getClientsData, getEventsData} = require('./data-service');
@@ -81,7 +83,14 @@ async function processRequest(chatId, msg, query, type) {
           status: OrderStatus.EVENT,
         });
 
-        screen.event(bot, chatId, event);
+        const posterPath = path.join(__dirname, '..', 'img', event.poster);
+
+        if (event.poster && fs.existsSync(posterPath)) {
+          screen.eventWithPoster(bot, chatId, event, posterPath);
+        } else {
+          screen.event(bot, chatId, event);
+        }
+
       }
       break;
     }
