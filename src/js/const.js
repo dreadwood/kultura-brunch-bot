@@ -4,6 +4,7 @@ module.exports.SCOPES = 'https://www.googleapis.com/auth/spreadsheets';
 module.exports.CREDENTIALS_FILE = 'credentials.json';
 module.exports.FEEDBACK = '@ellyprohorova';
 module.exports.ACOUNT_NAME = 'Bykov Sergei';
+module.exports.TIME_SESSION = 600000;
 module.exports.REG_EXP_PHONE = /^[\d\s\-()+]+$/;
 
 module.exports.OrderStatus = {
@@ -26,6 +27,13 @@ module.exports.ChanelCommands = {
 module.exports.UserCommands = {
   RESET: 'reset',
   RETURN_POLICY: 'returnPolicy',
+};
+
+module.exports.BotCommands = {
+  START: {
+    command: 'start',
+    description: 'Выбрать мероприятие',
+  },
 };
 
 module.exports.Pages = {

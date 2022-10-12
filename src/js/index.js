@@ -5,11 +5,13 @@ const path = require('path');
 const TelegramBot = require('node-telegram-bot-api');
 const State = require('./state');
 const Screen = require('./screen');
+const helpers = require('./helpers');
 const {
   OrderStatus,
   ChanelCommands,
   UserCommands,
   REG_EXP_PHONE,
+  BotCommands,
 } = require('./const');
 const {
   getEventData,
@@ -24,10 +26,9 @@ const bot = new TelegramBot(BOT_TOKEN, {polling: true});
 const state = new State();
 const screen = new Screen(bot);
 
-bot.setMyCommands([{
-  command: 'start',
-  description: 'Выбрать мероприятие',
-}]);
+bot.setMyCommands([
+  BotCommands.START,
+]);
 
 
 bot.on('message', (msg, metadata) => {
@@ -162,6 +163,7 @@ async function processRequest(chatId, msg, query, type) {
         screen.userTicket(chatId, ticketsOnSale);
         state.setState(chatId, {
           ticketsOnSale,
+          startSessionTime: Date.now(),
           status: OrderStatus.TICKET,
         });
       } else {
@@ -172,7 +174,15 @@ async function processRequest(chatId, msg, query, type) {
 
 
     case OrderStatus.TICKET: {
-      const {ticketsOnSale} = state.getState(chatId);
+      const {ticketsOnSale, startSessionTime} = state.getState(chatId);
+
+      // TODO 2022-10-13 / refactor
+      if (helpers.isSessionTimeUp(startSessionTime)) {
+        screen.userTimeUp(chatId);
+        state.initionlState(chatId);
+        return;
+      }
+
       const enterNumber = Number(msg.text);
 
       if (type === 'text' && !isNaN(enterNumber)) {
@@ -195,6 +205,15 @@ async function processRequest(chatId, msg, query, type) {
 
 
     case OrderStatus.NAME: {
+      const {startSessionTime} = state.getState(chatId);
+
+      // TODO 2022-10-13 / refactor
+      if (helpers.isSessionTimeUp(startSessionTime)) {
+        screen.userTimeUp(chatId);
+        state.initionlState(chatId);
+        return;
+      }
+
       if (type === 'text') {
         state.setState(chatId, {
           name: msg.text,
@@ -210,16 +229,26 @@ async function processRequest(chatId, msg, query, type) {
 
 
     case OrderStatus.PHONE: {
+      const {startSessionTime} = state.getState(chatId);
+
+      // TODO 2022-10-13 / refactor
+      if (helpers.isSessionTimeUp(startSessionTime)) {
+        screen.userTimeUp(chatId);
+        state.initionlState(chatId);
+        return;
+      }
+
       if (type === 'text') {
 
         if (msg.text.match(REG_EXP_PHONE)) {
           state.setState(chatId, {
+            startSessionTime: Date.now(),
             phone: msg.text.replace('+', 'plus'),
             status: OrderStatus.PAYMENT,
           });
 
           const {event} = state.getState(chatId);
-          screen.payment(chatId, event);
+          screen.userPayment(chatId, event);
         } else {
           screen.phoneMistake(chatId);
         }
@@ -232,6 +261,15 @@ async function processRequest(chatId, msg, query, type) {
 
 
     case OrderStatus.PAYMENT: {
+      const {startSessionTime} = state.getState(chatId);
+
+      // TODO 2022-10-13 / refactor
+      if (helpers.isSessionTimeUp(startSessionTime)) {
+        screen.userTimeUp(chatId);
+        state.initionlState(chatId);
+        return;
+      }
+
       if (type === 'callback_query' && query.data === UserCommands.RETURN_POLICY) {
         screen.userReturnPolicy(chatId);
         return;
@@ -269,7 +307,7 @@ async function processRequest(chatId, msg, query, type) {
 
 
     case OrderStatus.CHECK: {
-      screen.checkMistake(chatId);
+      screen.userCheckReceipt(chatId);
       break;
     }
   }

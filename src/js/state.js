@@ -15,6 +15,7 @@ class State {
       ticketsOnSale: null,
       event: null,
       events: [],
+      startSessionTime: 0,
       status: OrderStatus.WELCOME,
     };
   }

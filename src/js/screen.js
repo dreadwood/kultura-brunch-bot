@@ -126,9 +126,9 @@ class Screen {
   }
 
 
-  async payment(chatId, event) {
+  async userPayment(chatId, event) {
     const textInfoPay = `${event.infopay}\nAccount number / Name:`;
-    const textRequestReceipt = 'Отправьте, пожалуйста, чек об оплате.';
+    const textRequestReceipt = 'Бронь действительна в течение 10 минут.\nОтправьте, пожалуйста, чек об оплате.';
 
     await this._bot.sendMessage(chatId, textInfoPay);
     await this._bot.sendMessage(chatId, ACCOUNT_NUMBER);
@@ -169,7 +169,7 @@ class Screen {
   }
 
 
-  checkMistake(chatId) {
+  userCheckReceipt(chatId) {
     const text = 'Мы сейчас проверим чек и отправим вам потвержедние.';
 
     this._bot.sendMessage(chatId, text);
@@ -195,6 +195,17 @@ class Screen {
 
     this._bot.sendMessage(chatId, text, {
       disable_web_page_preview: true,
+    });
+  }
+
+
+  userTimeUp(chatId) {
+    const text = 'К сожалению, время заказа вышло. Выберете мероприятие заново';
+
+    this._bot.sendMessage(chatId, text, {
+      reply_markup: {
+        inline_keyboard: keyboard.reset(),
+      },
     });
   }
 
