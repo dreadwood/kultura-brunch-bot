@@ -59,11 +59,13 @@ bot.on('callback_query', async (query) => {
     if (userState?.status === OrderStatus.CHECK) {
 
       if (command === ChanelCommands.CONFIRM) {
-        screen.done(userId);
+        await screen.userDone(userId);
+        await screen.chanelResponce(CHANEL_ID);
       }
 
       if (command === ChanelCommands.REPORT) {
-        screen.undone(userId);
+        await screen.userUndone(userId);
+        await screen.chanelResponce(CHANEL_ID);
       }
 
       state.setState(userId, {status: OrderStatus.WELCOME});
@@ -76,16 +78,18 @@ bot.on('callback_query', async (query) => {
 
       if (userOrders.length === 0) {
         screen.chanelUserHasNoOrders(CHANEL_ID);
-      } else {
-        const event = await getEventData(eventId);
-
-        if (event) {
-          screen.userNoticeEvent(userId, event);
-        } else {
-          screen.chanelNoEvent(CHANEL_ID);
-        }
-
+        return;
       }
+
+      const event = await getEventData(eventId);
+
+      if (event && event.notice) {
+        await screen.userNoticeEvent(userId, event);
+        await screen.chanelResponce(CHANEL_ID);
+      } else {
+        screen.chanelNoEvent(CHANEL_ID);
+      }
+
       return;
     }
 

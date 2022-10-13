@@ -179,14 +179,14 @@ class Screen {
   }
 
 
-  done(chatId) {
+  userDone(chatId) {
     const text = 'Поздравляем, оплата прошла. Будем ждать вас на мероприятии.';
 
     this._bot.sendMessage(chatId, text);
   }
 
 
-  undone(chatId) {
+  userUndone(chatId) {
     const text = `Почему-то мы не видем вашей оплаты. Прошу связаться с ${FEEDBACK_CONTACT}`;
 
     this._bot.sendMessage(chatId, text);
@@ -248,7 +248,14 @@ event: ${event.id}
 
 
   chanelNoEvent(chanelId) {
-    const text = 'Невозможно найти такое событие. Проверте id event.';
+    const text = 'Невозможно найти такое событие или его уведомление.';
+
+    this._bot.sendMessage(chanelId, text);
+  }
+
+
+  chanelResponce(chanelId) {
+    const text = 'Сообщение было отпралено пользователю.';
 
     this._bot.sendMessage(chanelId, text);
   }
