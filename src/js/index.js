@@ -309,7 +309,7 @@ async function processRequest(chatId, msg, query, type) {
           phone,
           countTicket,
           '', // payment,
-          new Date().toLocaleString(),
+          new Date().toLocaleString('ru-RU'),
           event.id,
         ]);
 
