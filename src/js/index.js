@@ -6,6 +6,7 @@ const TelegramBot = require('node-telegram-bot-api');
 const State = require('./state');
 const Screen = require('./screen');
 const helpers = require('./helpers');
+const {getLogger} = require('./logger');
 const {
   OrderStatus,
   ChanelCommands,
@@ -22,6 +23,7 @@ const {
 
 const {BOT_TOKEN, CHANEL_ID} = process.env;
 
+const logger = getLogger({name: 'commd'});
 const bot = new TelegramBot(BOT_TOKEN, {polling: true});
 const state = new State();
 const screen = new Screen(bot);
@@ -30,6 +32,7 @@ bot.setMyCommands([
   BotCommands.START,
 ]);
 
+logger.info('START BOT');
 
 bot.on('message', (msg, metadata) => {
   const chatId = msg.chat.id;
@@ -37,6 +40,8 @@ bot.on('message', (msg, metadata) => {
   if (metadata.type === 'text' && msg.text === '/start') {
     state.initionlState(chatId);
   }
+
+  logger.info(`${chatId} '${metadata.type}' ${msg.text || ''}`);
 
   processRequest(chatId, msg, null, metadata.type);
 });
@@ -49,7 +54,10 @@ bot.on('callback_query', async (query) => {
     const [userId, eventId, command] = query.data.split('_');
     const userState = state.getState(userId);
 
+    logger.info(`${CHANEL_ID} 'callback_query' ${query.data}`);
+
     if (userState?.status === OrderStatus.CHECK) {
+
       if (command === ChanelCommands.CONFIRM) {
         screen.done(userId);
       }
@@ -88,6 +96,8 @@ bot.on('callback_query', async (query) => {
   if (query.data === UserCommands.RESET) {
     state.initionlState(chatId);
   }
+
+  logger.info(`${chatId} 'callback_query' ${query.data}`);
 
   processRequest(chatId, null, query, 'callback_query');
 });

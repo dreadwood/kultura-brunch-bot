@@ -1,6 +1,9 @@
 'use strict';
 
 const {OrderStatus} = require('./const');
+const {getLogger} = require('./logger');
+
+const logger = getLogger({name: 'state'});
 
 class State {
   constructor() {
@@ -18,6 +21,8 @@ class State {
       startSessionTime: 0,
       status: OrderStatus.WELCOME,
     };
+
+    logger.info(`${id} init`);
   }
 
   checkState(id) {
@@ -29,6 +34,14 @@ class State {
       ...this._state[id],
       ...date,
     };
+
+    // FIXME: 2022-10-13 /
+    if (date.event) {
+      date.event = date.event.id;
+    }
+    delete date.events;
+
+    logger.info(`${id} ${JSON.stringify(date)}`);
   }
 
   getState(id) {

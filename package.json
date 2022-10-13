@@ -4,8 +4,8 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "start": "node -r dotenv/config src/js",
-    "dev": "nodemon -r dotenv/config src/js",
+    "start": "NODE_ENV=production node -r dotenv/config src/js",
+    "dev": "NODE_ENV=development nodemon -r dotenv/config src/js",
     "eslint": "eslint --ext .js src/",
     "test": "npm run eslint"
   },
@@ -19,6 +19,8 @@
   "devDependencies": {
     "eslint": "8.24.0",
     "eslint-config-htmlacademy": "6.0.0",
-    "nodemon": "2.0.20"
+    "nodemon": "2.0.20",
+    "pino": "8.6.1",
+    "pino-pretty": "9.1.1"
   }
 }
