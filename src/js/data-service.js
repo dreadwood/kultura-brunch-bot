@@ -62,7 +62,9 @@ async function getSheetData(page, legendCells, dataCells) {
 // ===============================================
 
 async function getEventsData() {
-  return await getSheetData(Pages.EVENTS, 'A1:L1', 'A3:L9');
+  const data = await getSheetData(Pages.EVENTS, 'A1:L1', 'A3:L9');
+
+  return data.filter((row) => !!row.id);
 }
 
 async function getEventData(eventId) {

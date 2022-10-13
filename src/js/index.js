@@ -37,11 +37,11 @@ logger.info('START BOT');
 bot.on('message', (msg, metadata) => {
   const chatId = msg.chat.id;
 
+  logger.info(`${chatId} '${metadata.type}' ${msg.text || ''}`);
+
   if (metadata.type === 'text' && msg.text === '/start') {
     state.initionlState(chatId);
   }
-
-  logger.info(`${chatId} '${metadata.type}' ${msg.text || ''}`);
 
   processRequest(chatId, msg, null, metadata.type);
 });
@@ -151,6 +151,7 @@ async function processRequest(chatId, msg, query, type) {
         }
 
       } else {
+        // const events = await getEventsData();
         const {events} = state.getState(chatId);
         screen.userListMistake(chatId, events);
       }
