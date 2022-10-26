@@ -1,7 +1,7 @@
 'use strict';
 
 const {google} = require('googleapis');
-const {Pages} = require('./const');
+const {Pages, EventCells, OrderCells} = require('./const');
 const {getAuthClient} = require('./google-auth');
 
 const {SPREADSHEET_ID} = process.env;
@@ -62,7 +62,7 @@ async function getSheetData(page, legendCells, dataCells) {
 // ===============================================
 
 async function getEventsData() {
-  const data = await getSheetData(Pages.EVENTS, 'A1:L1', 'A3:L9');
+  const data = await getSheetData(Pages.EVENTS, EventCells.LEGEND, EventCells.DATA);
 
   return data.filter((row) => !!row.id);
 }
@@ -78,11 +78,11 @@ async function getEventData(eventId) {
   return eventData;
 }
 
-async function getClientsData() {
-  return await getSheetData(Pages.CLIENTS, 'A1:J1', 'A3:J33');
+async function getOrdersData() {
+  return await getSheetData(Pages.CLIENTS, OrderCells.LEGEND, OrderCells.DATA);
 }
 
-function addClientsData(data) {
+function addOrdersData(data) {
   addSheetData(Pages.CLIENTS, data);
 }
 
@@ -90,6 +90,6 @@ function addClientsData(data) {
 module.exports = {
   getEventsData,
   getEventData,
-  getClientsData,
-  addClientsData,
+  getOrdersData,
+  addOrdersData,
 };

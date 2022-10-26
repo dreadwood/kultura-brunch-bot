@@ -46,3 +46,13 @@ module.exports.Env = {
   DEVELOPMENT: 'development',
   PRODUCTION: 'production',
 };
+
+module.exports.EventCells = {
+  LEGEND: 'A1:L1',
+  DATA: 'A3:L9',
+};
+
+module.exports.OrderCells = {
+  LEGEND: 'A1:J1',
+  DATA: 'A3:J251',
+};

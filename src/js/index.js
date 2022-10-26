@@ -16,8 +16,8 @@ const {
 } = require('./const');
 const {
   getEventData,
-  addClientsData,
-  getClientsData,
+  addOrdersData,
+  getOrdersData,
   getEventsData,
 } = require('./data-service');
 
@@ -73,7 +73,7 @@ bot.on('callback_query', async (query) => {
     }
 
     if (command === ChanelCommands.NOTICE) {
-      const orders = await getClientsData();
+      const orders = await getOrdersData();
       const userOrders = orders.filter((order) => order.user_id === userId && order.event_id === eventId);
 
       if (userOrders.length === 0) {
@@ -162,7 +162,7 @@ async function processRequest(chatId, msg, query, type) {
     case OrderStatus.EVENT: {
       if (type === 'callback_query') {
         const {event} = state.getState(chatId);
-        const orders = await getClientsData();
+        const orders = await getOrdersData();
 
         const ordersEvent = orders.filter((order) => order.event_id === event.id);
         const ticketsOnSale = ordersEvent.reduce(
@@ -300,7 +300,7 @@ async function processRequest(chatId, msg, query, type) {
         const {event, name, phone, countTicket} = stateUser;
         screen.chanelReceipt(CHANEL_ID, msg, stateUser);
 
-        addClientsData([
+        addOrdersData([
           chatId,
           msg.from.first_name,
           msg.from.last_name,
