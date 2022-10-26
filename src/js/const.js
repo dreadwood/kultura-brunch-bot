@@ -1,7 +1,6 @@
 'use strict';
 
 module.exports.SCOPES = 'https://www.googleapis.com/auth/spreadsheets';
-module.exports.CREDENTIALS_FILE = 'credentials.json';
 
 module.exports.LOG_FILE = 'bot.log';
 module.exports.DEFAULT_LOG_LEVEL = 'info';

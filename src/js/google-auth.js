@@ -4,8 +4,10 @@ const fs = require('fs');
 const path = require('path');
 const {promisify} = require('util');
 const {google} = require('googleapis');
-const {SCOPES, CREDENTIALS_FILE} = require('./const');
+const {SCOPES} = require('./const');
 const readFile = promisify(fs.readFile);
+
+const {CREDENTIALS_FILE} = process.env;
 
 const CREDENTIALS_PATH = path.join(__dirname, '..', '..', CREDENTIALS_FILE);
 

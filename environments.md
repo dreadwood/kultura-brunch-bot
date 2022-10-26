@@ -1,6 +1,8 @@
-- `TOKEN` - токен для бота телеграма
-- `SPREADSHEET_ID` - id таблицы
-- `CHANEL_ID` - id канала для администратора
-- `ACCOUNT_NUMBER` - номер счета
-- `ACOUNT_NAME` - получатель (владелец счета)
-- `FEEDBACK_CONTACT` - ссылка на профиль для связи
+- `TOKEN` — токен для бота телеграма
+- `SPREADSHEET_ID` — id таблицы
+- `CREDENTIALS_FILE` — файл ключ сервисного аккаунта Google cloud console
+- `CHANEL_ID` — id канала для администратора
+- `ACCOUNT_NUMBER` — номер счета
+- `ACOUNT_NAME` — получатель (владелец счета)
+- `FEEDBACK_CONTACT` — ссылка на профиль для связи
+- `NTBA_FIX_350` — нужно установить `true` для `node-telegram-bot-api`

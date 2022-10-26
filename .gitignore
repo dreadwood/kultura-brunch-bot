@@ -24,4 +24,4 @@ dist/
 .env
 
 # Файлы с ключами
-credentials.json
+credentials*.json
