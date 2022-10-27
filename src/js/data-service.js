@@ -3,6 +3,7 @@
 const {google} = require('googleapis');
 const {Pages, EventCells, OrderCells} = require('./const');
 const {getAuthClient} = require('./google-auth');
+const helpers = require('./helpers');
 
 const {SPREADSHEET_ID} = process.env;
 
@@ -46,15 +47,15 @@ async function getSheetData(page, legendCells, dataCells) {
     ],
   });
 
-  const legend = valueRanges[0].values;
+  const legend = valueRanges[0].values[0];
   const data = valueRanges[1].values;
 
   if (!legend || !data) {
     return [];
   }
 
-  return data.map((row) => row.reduce((acc, cell, i) => {
-    acc[legend[0][i]] = cell;
+  return data.map((row) => legend.reduce((acc, _, i) => {
+    acc[legend[i]] = row[i] ?? '';
     return acc;
   }, {}));
 }
@@ -64,7 +65,7 @@ async function getSheetData(page, legendCells, dataCells) {
 async function getEventsData() {
   const data = await getSheetData(Pages.EVENTS, EventCells.LEGEND, EventCells.DATA);
 
-  return data.filter((row) => !!row.id);
+  return data.filter((row) => !!row.id && !helpers.isDatePassed(row.date));
 }
 
 async function getEventData(eventId) {

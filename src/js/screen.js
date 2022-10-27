@@ -248,7 +248,7 @@ event: ${event.id}
 
 
   chanelNoEvent(chanelId) {
-    const text = 'Невозможно найти такое событие или его уведомление.';
+    const text = 'Невозможно найти такое событие или его уведомление. Так же возможно оно уже прошло.';
 
     this._bot.sendMessage(chanelId, text);
   }

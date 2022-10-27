@@ -68,6 +68,7 @@ bot.on('callback_query', async (query) => {
         await screen.chanelResponce(CHANEL_ID);
       }
 
+      // change inition state
       state.setState(userId, {status: OrderStatus.WELCOME});
       return;
     }
@@ -142,7 +143,7 @@ async function processRequest(chatId, msg, query, type) {
           status: OrderStatus.EVENT,
         });
 
-        const posterPath = path.join(__dirname, '..', 'img', event.poster);
+        const posterPath = path.join(__dirname, '../img', event.poster || '');
 
         if (event.poster && fs.existsSync(posterPath)) {
           screen.eventWithPoster(chatId, event, posterPath);
