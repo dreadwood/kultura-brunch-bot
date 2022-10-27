@@ -57,21 +57,22 @@ bot.on('callback_query', async (query) => {
   const chatId = query.message.chat.id;
 
   if (chatId === Number(CHANEL_ID)) {
-    const [userId, eventId, command] = query.data.split('_');
-    const userState = state.getState(userId);
+    const [userId, userName, eventId, command] = query.data.split('_');
+    const adminName = query.from.username;
+    const {status} = state.getState(userId);
 
     logger.info(`${CHANEL_ID} 'callback_query' ${query.data}`);
 
-    if (userState?.status === OrderStatus.CHECK) {
+    if (status === OrderStatus.CHECK) {
 
       if (command === ChanelCommands.CONFIRM) {
         await screen.userDone(userId);
-        await screen.chanelResponce(CHANEL_ID);
+        await screen.chanelDone(CHANEL_ID, adminName, userName);
       }
 
-      if (command === ChanelCommands.REPORT) {
+      if (command === ChanelCommands.REJECT) {
         await screen.userUndone(userId);
-        await screen.chanelResponce(CHANEL_ID);
+        await screen.chanelUndone(CHANEL_ID, adminName, userName);
       }
 
       // change inition state
@@ -92,7 +93,7 @@ bot.on('callback_query', async (query) => {
 
       if (event && event.notice) {
         await screen.userNoticeEvent(userId, event);
-        await screen.chanelResponce(CHANEL_ID);
+        await screen.chanelNoticeEvent(CHANEL_ID, adminName, userName);
       } else {
         screen.chanelNoEvent(CHANEL_ID);
       }
@@ -251,7 +252,7 @@ async function processRequest(chatId, msg, query, type) {
 
 
     case OrderStatus.PHONE: {
-      const {startSessionTime} = state.getState(chatId);
+      const {startSessionTime, event} = state.getState(chatId);
 
       // TODO 2022-10-13 / refactor
       if (helpers.isSessionTimeUp(startSessionTime)) {
@@ -266,10 +267,10 @@ async function processRequest(chatId, msg, query, type) {
           state.setState(chatId, {
             startSessionTime: Date.now(),
             phone: msg.text.replace('+', ''),
+            userName: msg.from.username,
             status: OrderStatus.PAYMENT,
           });
 
-          const {event} = state.getState(chatId);
           screen.userPayment(chatId, event);
         } else {
           screen.phoneMistake(chatId);
@@ -304,14 +305,14 @@ async function processRequest(chatId, msg, query, type) {
         state.setState(chatId, {status: OrderStatus.CHECK});
 
         const stateUser = state.getState(chatId);
-        const {event, name, phone, countTicket} = stateUser;
-        screen.chanelReceipt(CHANEL_ID, msg, stateUser);
+        const {event, name, userName, phone, countTicket} = stateUser;
+        screen.chanelReceipt(CHANEL_ID, chatId, msg, stateUser);
 
         addOrdersData([
           chatId,
           msg.from.first_name,
           msg.from.last_name,
-          msg.from.username,
+          userName,
           name,
           phone,
           countTicket,

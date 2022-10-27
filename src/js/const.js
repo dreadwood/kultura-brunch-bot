@@ -23,7 +23,7 @@ module.exports.OrderStatus = {
 module.exports.ChanelCommands = {
   NOTICE: 'notice',
   CONFIRM: 'confirm',
-  REPORT: 'report',
+  REJECT: 'reject',
 };
 
 module.exports.UserCommands = {

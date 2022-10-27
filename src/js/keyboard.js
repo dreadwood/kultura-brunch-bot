@@ -48,22 +48,22 @@ module.exports = {
   },
 
 
-  chanel(userId, eventId) {
+  chanel(userId, userName, eventId) {
     return [
       [
         {
           text: 'потвердить',
-          callback_data: `${userId}_${eventId}_${ChanelCommands.CONFIRM}`,
+          callback_data: `${userId}_${userName}_${eventId}_${ChanelCommands.CONFIRM}`,
         },
         {
-          text: 'не ок',
-          callback_data: `${userId}_${eventId}_${ChanelCommands.REPORT}`,
+          text: 'отклонить',
+          callback_data: `${userId}_${userName}_${eventId}_${ChanelCommands.REJECT}`,
         },
       ],
       [
         {
           text: 'отправить уведомление',
-          callback_data: `${userId}_${eventId}_${ChanelCommands.NOTICE}`,
+          callback_data: `${userId}_${userName}_${eventId}_${ChanelCommands.NOTICE}`,
         },
       ],
     ];

@@ -14,6 +14,7 @@ class State {
     this._state[id] = {
       name: null,
       phone: null,
+      userName: null,
       countTicket: null,
       ticketsOnSale: null,
       event: null,

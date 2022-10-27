@@ -213,21 +213,21 @@ class Screen {
   }
 
 
-  async chanelReceipt(chanelId, msg, stateUser) {
-    const {message_id, from: {id, username}} = msg;
-    const {event, name, phone, countTicket} = stateUser;
+  async chanelReceipt(chanelId, userId, msg, stateUser) {
+    const {message_id} = msg;
+    const {event, name, phone, countTicket, userName} = stateUser;
 
     const text = `Имя: ${name}
-username: ${username}
+username: ${userName}
 phone: ${phone}
 ticket: ${countTicket}
 event: ${event.id}
 `;
 
-    await this._bot.forwardMessage(chanelId, id, message_id);
+    await this._bot.forwardMessage(chanelId, userId, message_id);
     this._bot.sendMessage(chanelId, text, {
       reply_markup: {
-        inline_keyboard: keyboard.chanel(id, event.id),
+        inline_keyboard: keyboard.chanel(userId, userName, event.id),
       },
     });
   }
@@ -254,8 +254,20 @@ event: ${event.id}
   }
 
 
-  chanelResponce(chanelId) {
-    const text = 'Сообщение было отпралено пользователю.';
+  chanelDone(chanelId, adminName, userName) {
+    const text = `${adminName} отправил ${userName} потверждение.`;
+
+    this._bot.sendMessage(chanelId, text);
+  }
+
+  chanelUndone(chanelId, adminName, userName) {
+    const text = `${adminName} ОТКЛОНИЛ фото чека ${userName}.`;
+
+    this._bot.sendMessage(chanelId, text);
+  }
+
+  chanelNoticeEvent(chanelId, adminName, userName) {
+    const text = `${adminName} отправил уведомление о мероприятии ${userName}.`;
 
     this._bot.sendMessage(chanelId, text);
   }
