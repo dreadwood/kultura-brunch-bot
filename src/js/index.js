@@ -13,6 +13,7 @@ const {
   UserCommands,
   REG_EXP_PHONE,
   BotCommands,
+  RUS_LOCAL,
 } = require('./const');
 const {
   getEventData,
@@ -34,19 +35,24 @@ bot.setMyCommands([
 
 logger.info('START BOT');
 
+/**
+ * ОТПРАВКА ДАННЫХ
+*/
 bot.on('message', (msg, metadata) => {
   const chatId = msg.chat.id;
 
   logger.info(`${chatId} '${metadata.type}' ${msg.text || ''}`);
 
-  if (metadata.type === 'text' && msg.text === '/start') {
+  if (msg.text === '/start') {
     state.initionlState(chatId);
   }
 
   processRequest(chatId, msg, null, metadata.type);
 });
 
-
+/**
+ * ЗАПРОСЫ
+*/
 bot.on('callback_query', async (query) => {
   const chatId = query.message.chat.id;
 
@@ -107,7 +113,9 @@ bot.on('callback_query', async (query) => {
   processRequest(chatId, null, query, 'callback_query');
 });
 
-
+/**
+ * ОБРАБОТЧИК
+*/
 async function processRequest(chatId, msg, query, type) {
   if (!state.checkState(chatId)) {
     state.initionlState(chatId);
@@ -119,7 +127,6 @@ async function processRequest(chatId, msg, query, type) {
       const events = await getEventsData();
 
       state.setState(chatId, {
-        events,
         status: OrderStatus.LIST,
       });
 
@@ -152,8 +159,7 @@ async function processRequest(chatId, msg, query, type) {
         }
 
       } else {
-        // const events = await getEventsData();
-        const {events} = state.getState(chatId);
+        const events = await getEventsData();
         screen.userListMistake(chatId, events);
       }
       break;
@@ -310,7 +316,7 @@ async function processRequest(chatId, msg, query, type) {
           phone,
           countTicket,
           '', // payment,
-          new Date().toLocaleString('ru-RU'),
+          new Date().toLocaleString(RUS_LOCAL),
           event.id,
         ]);
 

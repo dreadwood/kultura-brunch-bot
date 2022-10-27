@@ -17,7 +17,6 @@ class State {
       countTicket: null,
       ticketsOnSale: null,
       event: null,
-      events: [],
       startSessionTime: 0,
       status: OrderStatus.WELCOME,
     };
@@ -39,7 +38,6 @@ class State {
     if (date.event) {
       date.event = date.event.id;
     }
-    delete date.events;
 
     logger.info(`${id} ${JSON.stringify(date)}`);
   }

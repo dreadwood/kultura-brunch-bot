@@ -4,6 +4,7 @@ module.exports.SCOPES = 'https://www.googleapis.com/auth/spreadsheets';
 
 module.exports.LOG_FILE = 'bot.log';
 module.exports.DEFAULT_LOG_LEVEL = 'info';
+module.exports.RUS_LOCAL = 'ru-RU';
 
 module.exports.TIME_SESSION = 600000;
 module.exports.REG_EXP_PHONE = /^[\d\s\-()+]+$/;
