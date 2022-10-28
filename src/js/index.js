@@ -37,7 +37,7 @@ logger.info('START BOT');
 
 /**
  * ОТПРАВКА ДАННЫХ
-*/
+ */
 bot.on('message', (msg, metadata) => {
   const chatId = msg.chat.id;
 
@@ -52,27 +52,31 @@ bot.on('message', (msg, metadata) => {
 
 /**
  * ЗАПРОСЫ
-*/
+ */
 bot.on('callback_query', async (query) => {
   const chatId = query.message.chat.id;
 
   if (chatId === Number(CHANEL_ID)) {
     const [userId, userName, eventId, command] = query.data.split('_');
     const adminName = query.from.username;
-    const {status} = state.getState(userId);
+    const messageId = query.message.message_id;
+
+    const stateUser = state.getState(userId);
 
     logger.info(`${CHANEL_ID} 'callback_query' ${query.data}`);
 
-    if (status === OrderStatus.CHECK) {
+    if (stateUser?.status === OrderStatus.CHECK) {
 
       if (command === ChanelCommands.CONFIRM) {
         await screen.userDone(userId);
         await screen.chanelDone(CHANEL_ID, adminName, userName);
+        await screen.chanelUserDataNotice(CHANEL_ID, userId, messageId, stateUser);
       }
 
       if (command === ChanelCommands.REJECT) {
         await screen.userUndone(userId);
         await screen.chanelUndone(CHANEL_ID, adminName, userName);
+        await screen.chanelUserDataReject(CHANEL_ID, messageId, stateUser);
       }
 
       // change inition state
@@ -94,6 +98,7 @@ bot.on('callback_query', async (query) => {
       if (event && event.notice) {
         await screen.userNoticeEvent(userId, event);
         await screen.chanelNoticeEvent(CHANEL_ID, adminName, userName);
+        await screen.chanelUserDataNoticeRepeat(CHANEL_ID, userId, messageId, stateUser);
       } else {
         screen.chanelNoEvent(CHANEL_ID);
       }
@@ -116,7 +121,7 @@ bot.on('callback_query', async (query) => {
 
 /**
  * ОБРАБОТЧИК
-*/
+ */
 async function processRequest(chatId, msg, query, type) {
   if (!state.checkState(chatId)) {
     state.initionlState(chatId);
@@ -306,7 +311,9 @@ async function processRequest(chatId, msg, query, type) {
 
         const stateUser = state.getState(chatId);
         const {event, name, userName, phone, countTicket} = stateUser;
-        screen.chanelReceipt(CHANEL_ID, chatId, msg, stateUser);
+
+        await screen.chanelReceipt(CHANEL_ID, chatId, msg);
+        screen.chanelUserDataCheck(CHANEL_ID, chatId, stateUser);
 
         addOrdersData([
           chatId,

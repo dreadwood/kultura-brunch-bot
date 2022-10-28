@@ -48,7 +48,7 @@ module.exports = {
   },
 
 
-  chanel(userId, userName, eventId) {
+  chanelCheck(userId, userName, eventId) {
     return [
       [
         {
@@ -60,9 +60,27 @@ module.exports = {
           callback_data: `${userId}_${userName}_${eventId}_${ChanelCommands.REJECT}`,
         },
       ],
+    ];
+  },
+
+
+  chanelNotice(userId, userName, eventId) {
+    return [
       [
         {
           text: 'отправить уведомление',
+          callback_data: `${userId}_${userName}_${eventId}_${ChanelCommands.NOTICE}`,
+        },
+      ],
+    ];
+  },
+
+
+  chanelNoticeRepeat(userId, userName, eventId) {
+    return [
+      [
+        {
+          text: 'повторно отправить уведомление',
           callback_data: `${userId}_${userName}_${eventId}_${ChanelCommands.NOTICE}`,
         },
       ],

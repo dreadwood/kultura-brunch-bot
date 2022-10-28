@@ -187,7 +187,7 @@ class Screen {
 
 
   userUndone(chatId) {
-    const text = `Почему-то мы не видем вашей оплаты или произошла другая ошибка. Прошу связаться с ${FEEDBACK_CONTACT}`;
+    const text = `Почему-то мы не видем вашей оплаты или произошла другая ошибка. Просим связаться с ${FEEDBACK_CONTACT}`;
 
     this._bot.sendMessage(chatId, text);
   }
@@ -213,8 +213,31 @@ class Screen {
   }
 
 
-  async chanelReceipt(chanelId, userId, msg, stateUser) {
+  chanelReceipt(chanelId, userId, msg) {
     const {message_id} = msg;
+
+    this._bot.forwardMessage(chanelId, userId, message_id);
+  }
+
+
+  chanelUserDataCheck(chanelId, userId, stateUser) {
+    const {event, name, phone, countTicket, userName} = stateUser;
+
+    const text = `Имя: ${name}
+username: ${userName}
+phone: ${phone}
+ticket: ${countTicket}
+event: ${event.id}`;
+
+    this._bot.sendMessage(chanelId, text, {
+      reply_markup: {
+        inline_keyboard: keyboard.chanelCheck(userId, userName, event.id),
+      },
+    });
+  }
+
+
+  chanelUserDataReject(chanelId, messageId, stateUser) {
     const {event, name, phone, countTicket, userName} = stateUser;
 
     const text = `Имя: ${name}
@@ -222,12 +245,44 @@ username: ${userName}
 phone: ${phone}
 ticket: ${countTicket}
 event: ${event.id}
-`;
 
-    await this._bot.forwardMessage(chanelId, userId, message_id);
-    this._bot.sendMessage(chanelId, text, {
+ЗАКАЗ ОТКЛОНЕН ❌`;
+
+    this._bot.editMessageText(text, {
+      chat_id: chanelId,
+      message_id: messageId,
+    });
+  }
+
+
+  chanelUserDataNotice(chanelId, userId, messageId, stateUser) {
+    const {event, userName} = stateUser;
+
+    this._bot.editMessageReplyMarkup({
+      inline_keyboard: keyboard.chanelNotice(userId, userName, event.id),
+    }, {
+      chat_id: chanelId,
+      message_id: messageId,
+    });
+  }
+
+
+  chanelUserDataNoticeRepeat(chanelId, userId, messageId, stateUser) {
+    const {event, name, phone, countTicket, userName} = stateUser;
+
+    const text = `Имя: ${name}
+username: ${userName}
+phone: ${phone}
+ticket: ${countTicket}
+event: ${event.id}
+
+Уведомление отправлено ✅`;
+
+    this._bot.editMessageText(text, {
+      chat_id: chanelId,
+      message_id: messageId,
       reply_markup: {
-        inline_keyboard: keyboard.chanel(userId, userName, event.id),
+        inline_keyboard: keyboard.chanelNoticeRepeat(userId, userName, event.id),
       },
     });
   }
