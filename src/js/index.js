@@ -126,15 +126,19 @@ async function processRequest(chatId, msg, query, type) {
   if (!state.checkState(chatId)) {
     state.initionlState(chatId);
   }
-  const {status} = state.getState(chatId);
 
-  switch (status) {
+  const stateUser = state.getState(chatId);
+
+  switch (stateUser.status) {
     case OrderStatus.WELCOME: {
       const events = await getEventsData();
 
-      state.setState(chatId, {
-        status: OrderStatus.LIST,
-      });
+      if (!events.length) {
+        screen.userNoEvents(chatId);
+        return;
+      }
+
+      state.setState(chatId, {status: OrderStatus.LIST});
 
       screen.welcome(chatId, events);
       break;
@@ -174,7 +178,7 @@ async function processRequest(chatId, msg, query, type) {
 
     case OrderStatus.EVENT: {
       if (type === 'callback_query') {
-        const {event} = state.getState(chatId);
+        const {event} = stateUser;
         const orders = await getOrdersData();
 
         const ordersEvent = orders.filter((order) => order.event_id === event.id);
@@ -202,7 +206,7 @@ async function processRequest(chatId, msg, query, type) {
 
 
     case OrderStatus.TICKET: {
-      const {ticketsOnSale, startSessionTime} = state.getState(chatId);
+      const {ticketsOnSale, startSessionTime} = stateUser;
 
       // TODO 2022-10-13 / refactor
       if (helpers.isSessionTimeUp(startSessionTime)) {
@@ -233,7 +237,7 @@ async function processRequest(chatId, msg, query, type) {
 
 
     case OrderStatus.NAME: {
-      const {startSessionTime} = state.getState(chatId);
+      const {startSessionTime} = stateUser;
 
       // TODO 2022-10-13 / refactor
       if (helpers.isSessionTimeUp(startSessionTime)) {
@@ -257,7 +261,7 @@ async function processRequest(chatId, msg, query, type) {
 
 
     case OrderStatus.PHONE: {
-      const {startSessionTime, event} = state.getState(chatId);
+      const {startSessionTime, event} = stateUser;
 
       // TODO 2022-10-13 / refactor
       if (helpers.isSessionTimeUp(startSessionTime)) {
@@ -289,7 +293,7 @@ async function processRequest(chatId, msg, query, type) {
 
 
     case OrderStatus.PAYMENT: {
-      const {startSessionTime} = state.getState(chatId);
+      const {startSessionTime} = stateUser;
 
       // TODO 2022-10-13 / refactor
       if (helpers.isSessionTimeUp(startSessionTime)) {
@@ -309,7 +313,6 @@ async function processRequest(chatId, msg, query, type) {
         screen.check(chatId);
         state.setState(chatId, {status: OrderStatus.CHECK});
 
-        const stateUser = state.getState(chatId);
         const {event, name, userName, phone, countTicket} = stateUser;
 
         await screen.chanelReceipt(CHANEL_ID, chatId, msg);

@@ -69,6 +69,13 @@ class Screen {
   }
 
 
+  userNoEvents(chatId) {
+    const text = 'К сожалению, в ближайшее время мероприятий нет.';
+
+    this._bot.sendMessage(chatId, text);
+  }
+
+
   eventMistake(chatId) {
     const text = 'Хотите выбрать другое мероприятие?';
 
