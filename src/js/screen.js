@@ -172,6 +172,7 @@ class Screen {
     this._bot.sendMessage(chatId, text);
   }
 
+
   check(chatId) {
     const text = 'Спасибо! Мы забронировали за вами места. В ближайшее время мы проверим оплату.';
 
@@ -330,6 +331,38 @@ event: ${event.id}
 
   chanelNoticeEvent(chanelId, adminName, userName) {
     const text = `${adminName} отправил уведомление о мероприятии ${userName}.`;
+
+    this._bot.sendMessage(chanelId, text);
+  }
+
+
+  async userPaymentRequest(chatId) {
+    const text = 'Отправьте, пожалуйста, чек доплаты. Реквизиты:\nAccount number / Name';
+
+    await this._bot.sendMessage(chatId, text);
+    await this._bot.sendMessage(chatId, ACCOUNT_NUMBER);
+    await this._bot.sendMessage(chatId, ACOUNT_NAME);
+  }
+
+
+  userPaymentDone(chatId) {
+    const text = 'Спасибо! Будем рады вас видеть снова.';
+
+    this._bot.sendMessage(chatId, text);
+  }
+
+
+  chanelPaymentReceipt(chanelId, userId, msg) {
+    const {message_id} = msg;
+
+    this._bot.forwardMessage(chanelId, userId, message_id);
+  }
+
+  chanelPaymentData(chanelId, stateUser) {
+    const {userName} = stateUser;
+
+    const text = `ДОПЛАТА 💰
+username: ${userName}`;
 
     this._bot.sendMessage(chanelId, text);
   }

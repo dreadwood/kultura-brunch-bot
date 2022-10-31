@@ -9,11 +9,13 @@ const helpers = require('./helpers');
 const {getLogger} = require('./logger');
 const {
   OrderStatus,
-  ChanelCommands,
-  UserCommands,
   REG_EXP_PHONE,
-  BotCommands,
   RUS_LOCAL,
+  // OrderStatusCode,
+  ChanelQuery,
+  UserQuery,
+  UserCommands,
+  LENGTH_ORDER_ID,
 } = require('./const');
 const {
   getEventData,
@@ -21,6 +23,7 @@ const {
   getOrdersData,
   getEventsData,
 } = require('./data-service');
+const {nanoid} = require('nanoid');
 
 const {BOT_TOKEN, CHANEL_ID} = process.env;
 
@@ -30,103 +33,124 @@ const state = new State();
 const screen = new Screen(bot);
 
 bot.setMyCommands([
-  BotCommands.START,
+  UserCommands.START,
+  UserCommands.RECEIPT,
 ]);
 
 logger.info('START BOT');
+
 
 /**
  * ОТПРАВКА ДАННЫХ
  */
 bot.on('message', (msg, metadata) => {
-  const chatId = msg.chat.id;
+  const user = msg.from;
 
-  logger.info(`${chatId} '${metadata.type}' ${msg.text || ''}`);
-
-  if (msg.text === '/start') {
-    state.initionlState(chatId);
+  if (!state.checkState(user.id)) {
+    state.initionlState(user);
   }
 
-  processRequest(chatId, msg, null, metadata.type);
+  if (msg.text === UserCommands.START.command) {
+    state.setState(user.id, {status: OrderStatus.WELCOME});
+  }
+
+  if (msg.text === UserCommands.RECEIPT.command) {
+    state.setState(user.id, {status: OrderStatus.PAYMENT_RECEIPT_REQUEST});
+  }
+
+  logger.info(`${user.username} '${metadata.type.toUpperCase()}' ${msg.text || ''}`);
+  processRequest(user.id, msg, null, metadata.type);
 });
+
 
 /**
  * ЗАПРОСЫ
  */
 bot.on('callback_query', async (query) => {
-  const chatId = query.message.chat.id;
+  const chat = query.message.chat;
+  const user = query.from;
 
-  if (chatId === Number(CHANEL_ID)) {
-    const [userId, userName, eventId, command] = query.data.split('_');
-    const adminName = query.from.username;
-    const messageId = query.message.message_id;
-
-    const stateUser = state.getState(userId);
-
-    logger.info(`${CHANEL_ID} 'callback_query' ${query.data}`);
-
-    if (stateUser?.status === OrderStatus.CHECK) {
-
-      if (command === ChanelCommands.CONFIRM) {
-        await screen.userDone(userId);
-        await screen.chanelDone(CHANEL_ID, adminName, userName);
-        await screen.chanelUserDataNotice(CHANEL_ID, userId, messageId, stateUser);
-      }
-
-      if (command === ChanelCommands.REJECT) {
-        await screen.userUndone(userId);
-        await screen.chanelUndone(CHANEL_ID, adminName, userName);
-        await screen.chanelUserDataReject(CHANEL_ID, messageId, stateUser);
-      }
-
-      // change inition state
-      state.setState(userId, {status: OrderStatus.WELCOME});
-      return;
-    }
-
-    if (command === ChanelCommands.NOTICE) {
-      const orders = await getOrdersData();
-      const userOrders = orders.filter((order) => order.user_id === userId && order.event_id === eventId);
-
-      if (userOrders.length === 0) {
-        screen.chanelUserHasNoOrders(CHANEL_ID);
-        return;
-      }
-
-      const event = await getEventData(eventId);
-
-      if (event && event.notice) {
-        await screen.userNoticeEvent(userId, event);
-        await screen.chanelNoticeEvent(CHANEL_ID, adminName, userName);
-        await screen.chanelUserDataNoticeRepeat(CHANEL_ID, userId, messageId, stateUser);
-      } else {
-        screen.chanelNoEvent(CHANEL_ID);
-      }
-
-      return;
-    }
-
-    screen.chanelBadRequest(CHANEL_ID);
+  if (chat.id === Number(CHANEL_ID)) {
+    chanelProcess(chat.id, query);
     return;
   }
 
-  if (query.data === UserCommands.RESET) {
-    state.initionlState(chatId);
+  if (!state.checkState(user.id)) {
+    state.initionlState(user);
   }
 
-  logger.info(`${chatId} 'callback_query' ${query.data}`);
+  // TODO: 2022-10-31 / is this work?
+  if (query.data === UserQuery.RESET) {
+    state.setState(user.id, {status: OrderStatus.WELCOME});
+  }
 
-  processRequest(chatId, null, query, 'callback_query');
+  logger.info(`${user.username} 'QUERY' ${query.data}`);
+  processRequest(user.id, null, query, 'callback_query');
 });
 
+
 /**
- * ОБРАБОТЧИК
+ * ОБРАБОТЧИК КАНАЛА
  */
-async function processRequest(chatId, msg, query, type) {
-  if (!state.checkState(chatId)) {
-    state.initionlState(chatId);
+async function chanelProcess(chanelId, query) {
+  const [userId, userName, eventId, command] = query.data.split('_');
+  const adminName = query.from.username;
+  const messageId = query.message.message_id;
+
+  const stateUser = state.getState(userId);
+
+  logger.info(`${chanelId} 'QUERY' ${query.data}`);
+
+  // TODO: 2022-10-29 / убрать обращение к стейту
+  if (stateUser?.status === OrderStatus.CHECK) {
+
+    if (command === ChanelQuery.CONFIRM) {
+      await screen.userDone(userId);
+      await screen.chanelDone(chanelId, adminName, userName);
+      await screen.chanelUserDataNotice(chanelId, userId, messageId, stateUser);
+    }
+
+    if (command === ChanelQuery.REJECT) {
+      await screen.userUndone(userId);
+      await screen.chanelUndone(chanelId, adminName, userName);
+      await screen.chanelUserDataReject(chanelId, messageId, stateUser);
+    }
+
+    // change inition state
+    state.setState(userId, {status: OrderStatus.WELCOME});
+    return;
   }
 
+  if (command === ChanelQuery.NOTICE) {
+    const orders = await getOrdersData();
+    const userOrders = orders.filter((order) => order.user_id === userId && order.event_id === eventId);
+
+    if (userOrders.length === 0) {
+      screen.chanelUserHasNoOrders(chanelId);
+      return;
+    }
+
+    const event = await getEventData(eventId);
+
+    if (event && event.notice) {
+      await screen.userNoticeEvent(userId, event);
+      await screen.chanelNoticeEvent(chanelId, adminName, userName);
+      await screen.chanelUserDataNoticeRepeat(chanelId, userId, messageId, stateUser);
+    } else {
+      screen.chanelNoEvent(chanelId);
+    }
+
+    return;
+  }
+
+  screen.chanelBadRequest(chanelId);
+}
+
+
+/**
+ * ОБРАБОТЧИК ПОЛЬЗОВАТЕЛЯ
+ */
+async function processRequest(chatId, msg, query, type) {
   const stateUser = state.getState(chatId);
 
   switch (stateUser.status) {
@@ -138,9 +162,9 @@ async function processRequest(chatId, msg, query, type) {
         return;
       }
 
-      state.setState(chatId, {status: OrderStatus.LIST});
-
       screen.welcome(chatId, events);
+
+      state.setState(chatId, {status: OrderStatus.LIST});
       break;
     }
 
@@ -211,7 +235,7 @@ async function processRequest(chatId, msg, query, type) {
       // TODO 2022-10-13 / refactor
       if (helpers.isSessionTimeUp(startSessionTime)) {
         screen.userTimeUp(chatId);
-        state.initionlState(chatId);
+        state.setState(chatId, {status: OrderStatus.WELCOME});
         return;
       }
 
@@ -242,7 +266,7 @@ async function processRequest(chatId, msg, query, type) {
       // TODO 2022-10-13 / refactor
       if (helpers.isSessionTimeUp(startSessionTime)) {
         screen.userTimeUp(chatId);
-        state.initionlState(chatId);
+        state.setState(chatId, {status: OrderStatus.WELCOME});
         return;
       }
 
@@ -266,7 +290,7 @@ async function processRequest(chatId, msg, query, type) {
       // TODO 2022-10-13 / refactor
       if (helpers.isSessionTimeUp(startSessionTime)) {
         screen.userTimeUp(chatId);
-        state.initionlState(chatId);
+        state.setState(chatId, {status: OrderStatus.WELCOME});
         return;
       }
 
@@ -298,11 +322,11 @@ async function processRequest(chatId, msg, query, type) {
       // TODO 2022-10-13 / refactor
       if (helpers.isSessionTimeUp(startSessionTime)) {
         screen.userTimeUp(chatId);
-        state.initionlState(chatId);
+        state.setState(chatId, {status: OrderStatus.WELCOME});
         return;
       }
 
-      if (type === 'callback_query' && query.data === UserCommands.RETURN_POLICY) {
+      if (type === 'callback_query' && query.data === UserQuery.RETURN_POLICY) {
         screen.userReturnPolicy(chatId);
         return;
       }
@@ -313,8 +337,6 @@ async function processRequest(chatId, msg, query, type) {
         screen.check(chatId);
         state.setState(chatId, {status: OrderStatus.CHECK});
 
-        const {event, name, userName, phone, countTicket} = stateUser;
-
         await screen.chanelReceipt(CHANEL_ID, chatId, msg);
         screen.chanelUserDataCheck(CHANEL_ID, chatId, stateUser);
 
@@ -322,13 +344,15 @@ async function processRequest(chatId, msg, query, type) {
           chatId,
           msg.from.first_name,
           msg.from.last_name,
-          userName,
-          name,
-          phone,
-          countTicket,
+          stateUser.userName,
+          stateUser.name,
+          stateUser.phone,
+          stateUser.countTicket,
           '', // payment,
           new Date().toLocaleString(RUS_LOCAL),
-          event.id,
+          stateUser.event.id,
+          nanoid(LENGTH_ORDER_ID),
+          // OrderStatusCode.pending,
         ]);
 
         return;
@@ -341,6 +365,27 @@ async function processRequest(chatId, msg, query, type) {
 
     case OrderStatus.CHECK: {
       screen.userCheckReceipt(chatId);
+      break;
+    }
+
+
+    case OrderStatus.PAYMENT_RECEIPT_REQUEST: {
+      screen.userPaymentRequest(chatId);
+
+      state.setState(chatId, {status: OrderStatus.PAYMENT_DONE});
+      break;
+    }
+
+
+    case OrderStatus.PAYMENT_DONE: {
+      if (type === 'photo' || type === 'document') {
+        await screen.chanelPaymentReceipt(CHANEL_ID, chatId, msg);
+        await screen.chanelPaymentData(CHANEL_ID, stateUser);
+        await screen.userPaymentDone(chatId);
+        // TODO: 2022-10-31 / needed?
+        state.setState(chatId, {status: OrderStatus.WELCOME});
+      }
+
       break;
     }
   }

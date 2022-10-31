@@ -7,6 +7,7 @@ module.exports.DEFAULT_LOG_LEVEL = 'info';
 module.exports.RUS_LOCAL = 'ru-RU';
 
 module.exports.TIME_SESSION = 600000;
+module.exports.LENGTH_ORDER_ID = 6;
 module.exports.REG_EXP_PHONE = /^[\d\s\-()+]+$/;
 
 module.exports.OrderStatus = {
@@ -18,23 +19,35 @@ module.exports.OrderStatus = {
   PHONE: 'PHONE', // phone input
   PAYMENT: 'PAYMENT', // payment request
   CHECK: 'CHECK', // receipt check
+  PAYMENT_RECEIPT_REQUEST: 'PAYMENT_RECEIPT_REQUEST',
+  PAYMENT_DONE: 'PAYMENT_DONE',
 };
 
-module.exports.ChanelCommands = {
+module.exports.OrderStatusCode = {
+  pending: 0,
+  approved: 1,
+  reject: 2,
+};
+
+module.exports.ChanelQuery = {
   NOTICE: 'notice',
   CONFIRM: 'confirm',
   REJECT: 'reject',
 };
 
-module.exports.UserCommands = {
+module.exports.UserQuery = {
   RESET: 'reset',
   RETURN_POLICY: 'returnPolicy',
 };
 
-module.exports.BotCommands = {
+module.exports.UserCommands = {
   START: {
-    command: 'start',
+    command: '/start',
     description: 'Выбрать мероприятие',
+  },
+  RECEIPT: {
+    command: '/receipt',
+    description: 'Отправить чек доплаты',
   },
 };
 
@@ -54,6 +67,6 @@ module.exports.EventCells = {
 };
 
 module.exports.OrderCells = {
-  LEGEND: 'A1:J1',
-  DATA: 'A3:J251',
+  LEGEND: 'A1:L1',
+  DATA: 'A3:L251',
 };

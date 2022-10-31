@@ -10,11 +10,11 @@ class State {
     this._state = {};
   }
 
-  initionlState(id) {
-    this._state[id] = {
+  initionlState(user) {
+    this._state[user.id] = {
       name: null,
       phone: null,
-      userName: null,
+      userName: user.username,
       countTicket: null,
       ticketsOnSale: null,
       event: null,
@@ -22,7 +22,7 @@ class State {
       status: OrderStatus.WELCOME,
     };
 
-    logger.info(`${id} init`);
+    logger.info(`${user.username} init`);
   }
 
   checkState(id) {
@@ -30,6 +30,11 @@ class State {
   }
 
   setState(id, date) {
+    // TODO: 2022-11-01 / needed?
+    if (!this.checkState(id)) {
+      this.initionlState(id);
+    }
+
     this._state[id] = {
       ...this._state[id],
       ...date,
@@ -40,7 +45,7 @@ class State {
       date.event = date.event.id;
     }
 
-    logger.info(`${id} ${JSON.stringify(date)}`);
+    logger.info(`${this._state[id].username} ${JSON.stringify(date)}`);
   }
 
   getState(id) {

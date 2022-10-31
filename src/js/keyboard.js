@@ -1,8 +1,8 @@
 'use strict';
 
 const {
-  ChanelCommands,
-  UserCommands,
+  ChanelQuery,
+  UserQuery,
 } = require('./const');
 
 const RESET_BUTTON_TEXT = 'выбрать другое мероприятие';
@@ -29,7 +29,7 @@ module.exports = {
       [
         {
           text: RESET_BUTTON_TEXT,
-          callback_data: UserCommands.RESET,
+          callback_data: UserQuery.RESET,
         },
       ],
     ];
@@ -41,7 +41,7 @@ module.exports = {
       [
         {
           text: 'правила возврата',
-          callback_data: UserCommands.RETURN_POLICY,
+          callback_data: UserQuery.RETURN_POLICY,
         },
       ],
     ];
@@ -53,11 +53,11 @@ module.exports = {
       [
         {
           text: 'потвердить',
-          callback_data: `${userId}_${userName}_${eventId}_${ChanelCommands.CONFIRM}`,
+          callback_data: `${userId}_${userName}_${eventId}_${ChanelQuery.CONFIRM}`,
         },
         {
           text: 'отклонить',
-          callback_data: `${userId}_${userName}_${eventId}_${ChanelCommands.REJECT}`,
+          callback_data: `${userId}_${userName}_${eventId}_${ChanelQuery.REJECT}`,
         },
       ],
     ];
@@ -69,7 +69,7 @@ module.exports = {
       [
         {
           text: 'отправить уведомление',
-          callback_data: `${userId}_${userName}_${eventId}_${ChanelCommands.NOTICE}`,
+          callback_data: `${userId}_${userName}_${eventId}_${ChanelQuery.NOTICE}`,
         },
       ],
     ];
@@ -81,7 +81,7 @@ module.exports = {
       [
         {
           text: 'повторно отправить уведомление',
-          callback_data: `${userId}_${userName}_${eventId}_${ChanelCommands.NOTICE}`,
+          callback_data: `${userId}_${userName}_${eventId}_${ChanelQuery.NOTICE}`,
         },
       ],
     ];
@@ -96,7 +96,7 @@ module.exports = {
       [
         {
           text: RESET_BUTTON_TEXT,
-          callback_data: UserCommands.RESET,
+          callback_data: UserQuery.RESET,
         },
       ],
     ];
