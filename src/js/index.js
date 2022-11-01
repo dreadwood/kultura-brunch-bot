@@ -100,10 +100,15 @@ async function chanelProcess(chanelId, query) {
 
   const orders = await getOrdersData();
   const userOrder = orders.find((order) => order.order_id === orderId);
-  const {user_id: userId} = userOrder;
-
   if (!userOrder) {
     screen.chanelUserHasNoOrder(chanelId, adminName);
+    return;
+  }
+
+  const {user_id: userId} = userOrder;
+  const event = await getEventData(userOrder.event_id);
+  if (!event) {
+    screen.chanelNoEvent(chanelId);
     return;
   }
 
@@ -111,36 +116,32 @@ async function chanelProcess(chanelId, query) {
 
   switch (cmd) {
     case ChanelQuery.CONFIRM: {
-      await screen.userDone(userId);
+      await screen.userDone(userId, event);
       await screen.chanelUserDataNotice(chanelId, messageId, adminName, userOrder);
       break;
     }
 
 
     case ChanelQuery.REJECT: {
-      await screen.userUndone(userId);
+      await screen.userUndone(userId, event);
       await screen.chanelUserDataReject(chanelId, messageId, adminName, userOrder);
       break;
     }
 
 
     case ChanelQuery.NOTICE: {
-      const event = await getEventData(userOrder.event_id);
-
-      if (event && event.notice) {
+      if (event.notice) {
         await screen.userNoticeEvent(userId, event);
         screen.chanelUserDataNoticeRepeat(chanelId, messageId, adminName, userOrder);
       } else {
-        screen.chanelNoEvent(chanelId);
+        screen.chanelNoNotice(chanelId);
       }
-
       break;
     }
 
 
     default: {
       screen.chanelBadRequest(chanelId, adminName);
-
       break;
     }
   }

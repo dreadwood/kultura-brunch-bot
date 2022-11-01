@@ -180,15 +180,15 @@ class Screen {
   }
 
 
-  userDone(chatId) {
-    const text = 'Поздравляем, оплата прошла. Будем ждать вас на мероприятии.';
+  userDone(chatId, event) {
+    const text = `Поздравляем, оплата за "${event.date} / ${event.title}" прошла. Будем ждать вас на мероприятии.`;
 
     this._bot.sendMessage(chatId, text);
   }
 
 
-  userUndone(chatId) {
-    const text = `Почему-то мы не видем вашей оплаты или произошла другая ошибка. Просим связаться с ${FEEDBACK_CONTACT}`;
+  userUndone(chatId, event) {
+    const text = `Почему-то мы не видем вашей оплаты за "${event.date} / ${event.title}" или произошла другая ошибка. Просим связаться с ${FEEDBACK_CONTACT}`;
 
     this._bot.sendMessage(chatId, text);
   }
@@ -332,7 +332,14 @@ event: ${eventId}
 
 
   chanelNoEvent(chanelId, adminName) {
-    const text = `Нельзя отправить напоминание. Не найдено событие или его уведомление, посмотрите таблицу. @${adminName}`;
+    const text = `Не найдено событие, посмотрите таблицу. @${adminName}`;
+
+    this._bot.sendMessage(chanelId, text);
+  }
+
+
+  chanelNoNotice(chanelId, adminName) {
+    const text = `Нельзя отправить напоминание, не найдено его уведомление, посмотрите таблицу. @${adminName}`;
 
     this._bot.sendMessage(chanelId, text);
   }
