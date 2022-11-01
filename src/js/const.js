@@ -18,7 +18,6 @@ module.exports.OrderStatus = {
   NAME: 'NAME', // name input
   PHONE: 'PHONE', // phone input
   PAYMENT: 'PAYMENT', // payment request
-  CHECK: 'CHECK', // receipt check
   PAYMENT_RECEIPT_REQUEST: 'PAYMENT_RECEIPT_REQUEST',
   PAYMENT_DONE: 'PAYMENT_DONE',
 };

@@ -112,8 +112,6 @@ async function chanelProcess(chanelId, query) {
     case ChanelQuery.CONFIRM: {
       await screen.userDone(userId);
       await screen.chanelUserDataNotice(chanelId, messageId, adminName, userOrder);
-
-      state.setState(userId, {status: OrderStatus.WELCOME}); // TODO: 2022-10-29 / убрать обращение к стейту?
       break;
     }
 
@@ -121,8 +119,6 @@ async function chanelProcess(chanelId, query) {
     case ChanelQuery.REJECT: {
       await screen.userUndone(userId);
       await screen.chanelUserDataReject(chanelId, messageId, adminName, userOrder);
-
-      state.setState(userId, {status: OrderStatus.WELCOME});
       break;
     }
 
@@ -341,7 +337,7 @@ async function processRequest(chatId, msg, query, type) {
       // добавить статус "времено забронено"
       if (type === 'photo' || type === 'document') {
         screen.check(chatId);
-        state.setState(chatId, {status: OrderStatus.CHECK});
+        state.setState(chatId, {status: OrderStatus.WELCOME});
 
         await screen.chanelReceipt(CHANEL_ID, chatId, msg);
         screen.chanelUserDataCheck(CHANEL_ID, stateUser);
@@ -365,12 +361,6 @@ async function processRequest(chatId, msg, query, type) {
       }
 
       screen.paymentMistake(chatId);
-      break;
-    }
-
-
-    case OrderStatus.CHECK: {
-      screen.userCheckReceipt(chatId);
       break;
     }
 

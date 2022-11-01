@@ -180,13 +180,6 @@ class Screen {
   }
 
 
-  userCheckReceipt(chatId) {
-    const text = 'Мы сейчас проверим чек и отправим вам потвержедние.';
-
-    this._bot.sendMessage(chatId, text);
-  }
-
-
   userDone(chatId) {
     const text = 'Поздравляем, оплата прошла. Будем ждать вас на мероприятии.';
 
