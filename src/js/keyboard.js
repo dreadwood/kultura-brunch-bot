@@ -13,23 +13,30 @@ module.exports = {
   welcome(events) {
     return events.map((event) => [{
       text: `${event.date} / ${event.title}`,
-      callback_data: event.id, // TODO: 2022-11-01 / add comand
+      callback_data: JSON.stringify({
+        cmd: UserQuery.SELECT,
+        eventId: event.id,
+      }),
     }]);
   },
 
 
-  event(eventId) {
+  event() {
     return [
       [
         {
           text: 'купить билет',
-          callback_data: eventId, // TODO: 2022-11-01 / add comand
+          callback_data: JSON.stringify({
+            cmd: UserQuery.BUY,
+          }),
         },
       ],
       [
         {
           text: RESET_BUTTON_TEXT,
-          callback_data: UserQuery.RESET,
+          callback_data: JSON.stringify({
+            cmd: UserQuery.RESET,
+          }),
         },
       ],
     ];
@@ -41,7 +48,9 @@ module.exports = {
       [
         {
           text: 'правила возврата',
-          callback_data: UserQuery.RETURN_POLICY,
+          callback_data: JSON.stringify({
+            cmd: UserQuery.RETURN_POLICY,
+          }),
         },
       ],
     ];
@@ -86,14 +95,17 @@ module.exports = {
 
 
   // ==================================
-  //
+
+
   // common keyboard
   reset() {
     return [
       [
         {
           text: RESET_BUTTON_TEXT,
-          callback_data: UserQuery.RESET,
+          callback_data: JSON.stringify({
+            cmd: UserQuery.RESET,
+          }),
         },
       ],
     ];

@@ -37,6 +37,8 @@ module.exports.ChanelQuery = {
 module.exports.UserQuery = {
   RESET: 'reset',
   RETURN_POLICY: 'returnPolicy',
+  SELECT: 'select',
+  BUY: 'buy',
 };
 
 module.exports.UserCommands = {

@@ -79,8 +79,9 @@ bot.on('callback_query', async (query) => {
     state.initionlState(user);
   }
 
-  // TODO: 2022-10-31 / is this work?
-  if (query.data === UserQuery.RESET) {
+  // TODO: 2022-11-01 / убрать несколько JSON.parse
+  const {cmd} = JSON.parse(query.data);
+  if (cmd === UserQuery.RESET) {
     state.setState(user.id, {status: OrderStatus.WELCOME});
   }
 
@@ -170,25 +171,28 @@ async function processRequest(chatId, msg, query, type) {
 
     case OrderStatus.LIST: {
       if (type === 'callback_query') {
-        const eventId = query.data;
-        const event = await getEventData(eventId);
+        const {cmd, eventId} = JSON.parse(query.data);
 
-        if (!event) {
-          screen.userEventNotFound(chatId);
-          return;
-        }
+        if (cmd === UserQuery.SELECT) {
+          const event = await getEventData(eventId);
 
-        state.setState(chatId, {
-          event,
-          status: OrderStatus.EVENT,
-        });
+          if (!event) {
+            screen.userEventNotFound(chatId);
+            return;
+          }
 
-        const posterPath = path.join(__dirname, '../img', event.poster || '');
+          const posterPath = path.join(__dirname, '../img', event.poster || '');
 
-        if (event.poster && fs.existsSync(posterPath)) {
-          screen.eventWithPoster(chatId, event, posterPath);
-        } else {
-          screen.event(chatId, event);
+          if (event.poster && fs.existsSync(posterPath)) {
+            screen.eventWithPoster(chatId, event, posterPath);
+          } else {
+            screen.event(chatId, event);
+          }
+
+          state.setState(chatId, {
+            event,
+            status: OrderStatus.EVENT,
+          });
         }
 
       } else {
@@ -201,26 +205,30 @@ async function processRequest(chatId, msg, query, type) {
 
     case OrderStatus.EVENT: {
       if (type === 'callback_query') {
-        const {event} = stateUser;
-        const orders = await getOrdersData();
+        const {cmd} = JSON.parse(query.data);
 
-        const ordersEvent = orders.filter((order) => order.event_id === event.id);
-        const ticketsOnSale = ordersEvent.reduce(
-          (acc, order) => (acc -= Number(order.ticket)),
-          Number(event.capacity),
-        );
+        if (cmd === UserQuery.BUY) {
+          const {event} = stateUser;
+          const orders = await getOrdersData();
 
-        if (ticketsOnSale <= 0) {
-          screen.userTicketSoldOut(chatId);
-          return;
+          const ordersEvent = orders.filter((order) => order.event_id === event.id);
+          const ticketsOnSale = ordersEvent.reduce(
+            (acc, order) => (acc -= Number(order.ticket)),
+            Number(event.capacity),
+          );
+
+          if (ticketsOnSale <= 0) {
+            screen.userTicketSoldOut(chatId);
+            return;
+          }
+
+          screen.userTicket(chatId, ticketsOnSale);
+          state.setState(chatId, {
+            ticketsOnSale,
+            startSessionTime: Date.now(),
+            status: OrderStatus.TICKET,
+          });
         }
-
-        screen.userTicket(chatId, ticketsOnSale);
-        state.setState(chatId, {
-          ticketsOnSale,
-          startSessionTime: Date.now(),
-          status: OrderStatus.TICKET,
-        });
       } else {
         screen.eventMistake(chatId);
       }
@@ -328,8 +336,13 @@ async function processRequest(chatId, msg, query, type) {
         return;
       }
 
-      if (type === 'callback_query' && query.data === UserQuery.RETURN_POLICY) {
-        screen.userReturnPolicy(chatId);
+      if (type === 'callback_query') {
+        const {cmd} = JSON.parse(query.data);
+
+        if (cmd === UserQuery.RETURN_POLICY) {
+          screen.userReturnPolicy(chatId);
+        }
+
         return;
       }
 
@@ -378,7 +391,6 @@ async function processRequest(chatId, msg, query, type) {
         await screen.chanelPaymentReceipt(CHANEL_ID, chatId, msg);
         await screen.chanelPaymentData(CHANEL_ID, stateUser);
         await screen.userPaymentDone(chatId);
-        // TODO: 2022-10-31 / needed?
         state.setState(chatId, {status: OrderStatus.WELCOME});
       }
 

@@ -41,7 +41,7 @@ class Screen {
     this._bot.sendPhoto(chatId, posterPath, {
       caption: text,
       reply_markup: {
-        inline_keyboard: keyboard.event(event.id),
+        inline_keyboard: keyboard.event(),
       },
     }, {
       filename: event.poster,
@@ -56,7 +56,7 @@ class Screen {
     this._bot.sendMessage(chatId, text, {
       caption: text,
       reply_markup: {
-        inline_keyboard: keyboard.event(event.id),
+        inline_keyboard: keyboard.event(),
       },
     });
   }
