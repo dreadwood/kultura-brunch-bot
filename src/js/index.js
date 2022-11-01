@@ -112,8 +112,6 @@ async function chanelProcess(chanelId, query) {
     return;
   }
 
-  logger.info(`${chanelId} 'QUERY' ${query.data}`);
-
   switch (cmd) {
     case ChanelQuery.CONFIRM: {
       await screen.userDone(userId, event);
