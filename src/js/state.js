@@ -12,6 +12,7 @@ class State {
 
   initionlState(user) {
     this._state[user.id] = {
+      orderId: null,
       name: null,
       phone: null,
       userName: user.username,
@@ -40,7 +41,7 @@ class State {
       ...date,
     };
 
-    // FIXME: 2022-10-13 /
+    // TODO: 2022-10-13 / needed?
     if (date.event) {
       date.event = date.event.id;
     }

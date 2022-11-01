@@ -13,7 +13,7 @@ module.exports = {
   welcome(events) {
     return events.map((event) => [{
       text: `${event.date} / ${event.title}`,
-      callback_data: event.id,
+      callback_data: event.id, // TODO: 2022-11-01 / add comand
     }]);
   },
 
@@ -23,7 +23,7 @@ module.exports = {
       [
         {
           text: 'купить билет',
-          callback_data: eventId,
+          callback_data: eventId, // TODO: 2022-11-01 / add comand
         },
       ],
       [
@@ -48,40 +48,37 @@ module.exports = {
   },
 
 
-  chanelCheck(userId, userName, eventId) {
+  chanelCheck(orderId) {
     return [
       [
         {
           text: 'потвердить',
-          callback_data: `${userId}_${userName}_${eventId}_${ChanelQuery.CONFIRM}`,
+          callback_data: JSON.stringify({
+            cmd: ChanelQuery.CONFIRM,
+            orderId,
+          }),
         },
         {
           text: 'отклонить',
-          callback_data: `${userId}_${userName}_${eventId}_${ChanelQuery.REJECT}`,
+          callback_data: JSON.stringify({
+            cmd: ChanelQuery.REJECT,
+            orderId,
+          }),
         },
       ],
     ];
   },
 
 
-  chanelNotice(userId, userName, eventId) {
+  chanelNotice(orderId, isRepeat) {
     return [
       [
         {
-          text: 'отправить уведомление',
-          callback_data: `${userId}_${userName}_${eventId}_${ChanelQuery.NOTICE}`,
-        },
-      ],
-    ];
-  },
-
-
-  chanelNoticeRepeat(userId, userName, eventId) {
-    return [
-      [
-        {
-          text: 'повторно отправить уведомление',
-          callback_data: `${userId}_${userName}_${eventId}_${ChanelQuery.NOTICE}`,
+          text: `${isRepeat ? 'повторно ' : ''}отправить напоминание`,
+          callback_data: JSON.stringify({
+            cmd: ChanelQuery.NOTICE,
+            orderId,
+          }),
         },
       ],
     ];

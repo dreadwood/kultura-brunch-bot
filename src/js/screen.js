@@ -228,109 +228,118 @@ class Screen {
   }
 
 
-  chanelUserDataCheck(chanelId, userId, stateUser) {
-    const {event, name, phone, countTicket, userName} = stateUser;
+  chanelUserDataCheck(chanelId, stateUser) {
+    const {event, name, phone, countTicket, userName, orderId} = stateUser;
 
     const text = `Имя: ${name}
 username: ${userName}
 phone: ${phone}
 ticket: ${countTicket}
-event: ${event.id}`;
+event: ${event.id}`; // TODO: 2022-11-01 / change eventId?
 
     this._bot.sendMessage(chanelId, text, {
       reply_markup: {
-        inline_keyboard: keyboard.chanelCheck(userId, userName, event.id),
+        inline_keyboard: keyboard.chanelCheck(orderId),
       },
     });
   }
 
 
-  chanelUserDataReject(chanelId, messageId, stateUser) {
-    const {event, name, phone, countTicket, userName} = stateUser;
+  chanelUserDataNotice(chanelId, messageId, adminName, userOrder) {
+    const {
+      event_id: eventId,
+      name, phone,
+      ticket: countTicket,
+      username: userName,
+      order_id: orderId,
+    } = userOrder;
 
     const text = `Имя: ${name}
 username: ${userName}
 phone: ${phone}
 ticket: ${countTicket}
-event: ${event.id}
+event: ${eventId}
 
-ЗАКАЗ ОТКЛОНЕН ❌`;
-
-    this._bot.editMessageText(text, {
-      chat_id: chanelId,
-      message_id: messageId,
-    });
-  }
-
-
-  chanelUserDataNotice(chanelId, userId, messageId, stateUser) {
-    const {event, userName} = stateUser;
-
-    this._bot.editMessageReplyMarkup({
-      inline_keyboard: keyboard.chanelNotice(userId, userName, event.id),
-    }, {
-      chat_id: chanelId,
-      message_id: messageId,
-    });
-  }
-
-
-  chanelUserDataNoticeRepeat(chanelId, userId, messageId, stateUser) {
-    const {event, name, phone, countTicket, userName} = stateUser;
-
-    const text = `Имя: ${name}
-username: ${userName}
-phone: ${phone}
-ticket: ${countTicket}
-event: ${event.id}
-
-Уведомление отправлено ✅`;
+@${adminName} подтвердил чек 📝`;
 
     this._bot.editMessageText(text, {
       chat_id: chanelId,
       message_id: messageId,
       reply_markup: {
-        inline_keyboard: keyboard.chanelNoticeRepeat(userId, userName, event.id),
+        inline_keyboard: keyboard.chanelNotice(orderId),
       },
     });
   }
 
 
-  chanelBadRequest(chanelId) {
-    const text = 'Клавиши потверждения или отмены уже не актуальны';
+  chanelUserDataReject(chanelId, messageId, adminName, userOrder) {
+    const {
+      event_id: eventId,
+      name,
+      phone,
+      ticket: countTicket,
+      username: userName,
+    } = userOrder;
+
+    const text = `Имя: ${name}
+username: ${userName}
+phone: ${phone}
+ticket: ${countTicket}
+event: ${eventId}
+
+@${adminName} ОТКЛОНИЛ заказ ❌`;
+
+    this._bot.editMessageText(text, {
+      chat_id: chanelId,
+      message_id: messageId,
+    });
+  }
+
+
+  chanelUserDataNoticeRepeat(chanelId, messageId, adminName, userOrder) {
+    const {
+      event_id: eventId,
+      name,
+      phone,
+      ticket: countTicket,
+      username: userName,
+      order_id: orderId,
+    } = userOrder;
+
+    const text = `Имя: ${name}
+username: ${userName}
+phone: ${phone}
+ticket: ${countTicket}
+event: ${eventId}
+
+@${adminName} отправил напоминание ✅`;
+
+    this._bot.editMessageText(text, {
+      chat_id: chanelId,
+      message_id: messageId,
+      reply_markup: {
+        inline_keyboard: keyboard.chanelNotice(orderId, true),
+      },
+    });
+  }
+
+
+  chanelBadRequest(chanelId, adminName) {
+    const text = `Клавиши потверждения, отмены, напоминания уже не актуальны. (@${adminName})`;
 
     this._bot.sendMessage(chanelId, text);
   }
 
 
-  chanelUserHasNoOrders(chanelId) {
-    const text = 'Этот человек почему-то ничего не приобретал. Посмотрите таблицу.';
+  chanelUserHasNoOrder(chanelId, adminName) {
+    const text = `@${adminName} пытался/ась отправить напоминание. Не найден заказ, посмотрите таблицу.`;
 
     this._bot.sendMessage(chanelId, text);
   }
 
 
-  chanelNoEvent(chanelId) {
-    const text = 'Невозможно найти такое событие или его уведомление. Так же возможно оно уже прошло.';
-
-    this._bot.sendMessage(chanelId, text);
-  }
-
-
-  chanelDone(chanelId, adminName, userName) {
-    const text = `${adminName} отправил ${userName} потверждение.`;
-
-    this._bot.sendMessage(chanelId, text);
-  }
-
-  chanelUndone(chanelId, adminName, userName) {
-    const text = `${adminName} ОТКЛОНИЛ фото чека ${userName}.`;
-
-    this._bot.sendMessage(chanelId, text);
-  }
-
-  chanelNoticeEvent(chanelId, adminName, userName) {
-    const text = `${adminName} отправил уведомление о мероприятии ${userName}.`;
+  chanelNoEvent(chanelId, adminName) {
+    const text = `@${adminName} пытался/ась отпрвить напоминание. Не найдено событие или его уведомление. Посмотрите таблицу.`;
 
     this._bot.sendMessage(chanelId, text);
   }

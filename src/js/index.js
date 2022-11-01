@@ -93,57 +93,60 @@ bot.on('callback_query', async (query) => {
  * ОБРАБОТЧИК КАНАЛА
  */
 async function chanelProcess(chanelId, query) {
-  const [userId, userName, eventId, command] = query.data.split('_');
+  const {cmd, orderId} = JSON.parse(query.data);
   const adminName = query.from.username;
   const messageId = query.message.message_id;
 
-  const stateUser = state.getState(userId);
+  const orders = await getOrdersData();
+  const userOrder = orders.find((order) => order.order_id === orderId);
+  const {user_id: userId} = userOrder;
+
+  if (!userOrder) {
+    screen.chanelUserHasNoOrder(chanelId, adminName);
+    return;
+  }
 
   logger.info(`${chanelId} 'QUERY' ${query.data}`);
 
-  // TODO: 2022-10-29 / убрать обращение к стейту
-  if (stateUser?.status === OrderStatus.CHECK) {
-
-    if (command === ChanelQuery.CONFIRM) {
+  switch (cmd) {
+    case ChanelQuery.CONFIRM: {
       await screen.userDone(userId);
-      await screen.chanelDone(chanelId, adminName, userName);
-      await screen.chanelUserDataNotice(chanelId, userId, messageId, stateUser);
+      await screen.chanelUserDataNotice(chanelId, messageId, adminName, userOrder);
+
+      state.setState(userId, {status: OrderStatus.WELCOME}); // TODO: 2022-10-29 / убрать обращение к стейту?
+      break;
     }
 
-    if (command === ChanelQuery.REJECT) {
+
+    case ChanelQuery.REJECT: {
       await screen.userUndone(userId);
-      await screen.chanelUndone(chanelId, adminName, userName);
-      await screen.chanelUserDataReject(chanelId, messageId, stateUser);
+      await screen.chanelUserDataReject(chanelId, messageId, adminName, userOrder);
+
+      state.setState(userId, {status: OrderStatus.WELCOME});
+      break;
     }
 
-    // change inition state
-    state.setState(userId, {status: OrderStatus.WELCOME});
-    return;
+
+    case ChanelQuery.NOTICE: {
+      const event = await getEventData(userOrder.event_id);
+
+      if (event && event.notice) {
+        await screen.userNoticeEvent(userId, event);
+        screen.chanelUserDataNoticeRepeat(chanelId, messageId, adminName, userOrder);
+      } else {
+        screen.chanelNoEvent(chanelId);
+      }
+
+      break;
+    }
+
+
+    default: {
+      screen.chanelBadRequest(chanelId, adminName);
+
+      break;
+    }
   }
-
-  if (command === ChanelQuery.NOTICE) {
-    const orders = await getOrdersData();
-    const userOrders = orders.filter((order) => order.user_id === userId && order.event_id === eventId);
-
-    if (userOrders.length === 0) {
-      screen.chanelUserHasNoOrders(chanelId);
-      return;
-    }
-
-    const event = await getEventData(eventId);
-
-    if (event && event.notice) {
-      await screen.userNoticeEvent(userId, event);
-      await screen.chanelNoticeEvent(chanelId, adminName, userName);
-      await screen.chanelUserDataNoticeRepeat(chanelId, userId, messageId, stateUser);
-    } else {
-      screen.chanelNoEvent(chanelId);
-    }
-
-    return;
-  }
-
-  screen.chanelBadRequest(chanelId);
 }
 
 
@@ -232,7 +235,7 @@ async function processRequest(chatId, msg, query, type) {
     case OrderStatus.TICKET: {
       const {ticketsOnSale, startSessionTime} = stateUser;
 
-      // TODO 2022-10-13 / refactor
+      // TODO: 2022-10-13 / refactor
       if (helpers.isSessionTimeUp(startSessionTime)) {
         screen.userTimeUp(chatId);
         state.setState(chatId, {status: OrderStatus.WELCOME});
@@ -263,7 +266,7 @@ async function processRequest(chatId, msg, query, type) {
     case OrderStatus.NAME: {
       const {startSessionTime} = stateUser;
 
-      // TODO 2022-10-13 / refactor
+      // TODO: 2022-10-13 / refactor
       if (helpers.isSessionTimeUp(startSessionTime)) {
         screen.userTimeUp(chatId);
         state.setState(chatId, {status: OrderStatus.WELCOME});
@@ -297,7 +300,10 @@ async function processRequest(chatId, msg, query, type) {
       if (type === 'text') {
 
         if (msg.text.match(REG_EXP_PHONE)) {
+          const orderId = nanoid(LENGTH_ORDER_ID);
+
           state.setState(chatId, {
+            orderId,
             startSessionTime: Date.now(),
             phone: msg.text.replace('+', ''),
             userName: msg.from.username,
@@ -319,7 +325,7 @@ async function processRequest(chatId, msg, query, type) {
     case OrderStatus.PAYMENT: {
       const {startSessionTime} = stateUser;
 
-      // TODO 2022-10-13 / refactor
+      // TODO: 2022-10-13 / refactor
       if (helpers.isSessionTimeUp(startSessionTime)) {
         screen.userTimeUp(chatId);
         state.setState(chatId, {status: OrderStatus.WELCOME});
@@ -338,7 +344,7 @@ async function processRequest(chatId, msg, query, type) {
         state.setState(chatId, {status: OrderStatus.CHECK});
 
         await screen.chanelReceipt(CHANEL_ID, chatId, msg);
-        screen.chanelUserDataCheck(CHANEL_ID, chatId, stateUser);
+        screen.chanelUserDataCheck(CHANEL_ID, stateUser);
 
         addOrdersData([
           chatId,
@@ -351,7 +357,7 @@ async function processRequest(chatId, msg, query, type) {
           '', // payment,
           new Date().toLocaleString(RUS_LOCAL),
           stateUser.event.id,
-          nanoid(LENGTH_ORDER_ID),
+          stateUser.orderId,
           // OrderStatusCode.pending,
         ]);
 
