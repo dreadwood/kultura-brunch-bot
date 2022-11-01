@@ -31,11 +31,6 @@ class State {
   }
 
   setState(id, date) {
-    // TODO: 2022-11-01 / needed?
-    if (!this.checkState(id)) {
-      this.initionlState(id);
-    }
-
     this._state[id] = {
       ...this._state[id],
       ...date,

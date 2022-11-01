@@ -235,7 +235,7 @@ class Screen {
 username: ${userName}
 phone: ${phone}
 ticket: ${countTicket}
-event: ${event.id}`; // TODO: 2022-11-01 / change eventId?
+event: ${event.id}`;
 
     this._bot.sendMessage(chanelId, text, {
       reply_markup: {
@@ -325,21 +325,21 @@ event: ${eventId}
 
 
   chanelBadRequest(chanelId, adminName) {
-    const text = `Клавиши потверждения, отмены, напоминания уже не актуальны. (@${adminName})`;
+    const text = `Клавиши потверждения, отмены, напоминания уже не актуальны. @${adminName}`;
 
     this._bot.sendMessage(chanelId, text);
   }
 
 
   chanelUserHasNoOrder(chanelId, adminName) {
-    const text = `@${adminName} пытался/ась отправить напоминание. Не найден заказ, посмотрите таблицу.`;
+    const text = `Нельзя отправить напоминание. Не найден заказ, посмотрите таблицу. @${adminName}`;
 
     this._bot.sendMessage(chanelId, text);
   }
 
 
   chanelNoEvent(chanelId, adminName) {
-    const text = `@${adminName} пытался/ась отпрвить напоминание. Не найдено событие или его уведомление. Посмотрите таблицу.`;
+    const text = `Нельзя отправить напоминание. Не найдено событие или его уведомление, посмотрите таблицу. @${adminName}`;
 
     this._bot.sendMessage(chanelId, text);
   }

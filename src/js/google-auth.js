@@ -19,7 +19,7 @@ const CREDENTIALS_PATH = path.join(__dirname, '..', '..', CREDENTIALS_FILE);
 */
 const getAuthClient = async () => {
   const content = await readFile(CREDENTIALS_PATH)
-    .catch((error) => console.log('Error loading client secret file:', error));
+    .catch((error) => console.error('Error loading client secret file:', error));
 
   const {client_email , private_key} = JSON.parse(content);
 
