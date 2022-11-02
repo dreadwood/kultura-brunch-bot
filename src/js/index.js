@@ -85,6 +85,7 @@ bot.on('callback_query', async (query) => {
     state.setState(user.id, {status: OrderStatus.WELCOME});
   }
 
+  // TODO: 2022-11-02 / вверх и добавить чат
   logger.info(`${user.username} 'QUERY' ${query.data}`);
   processRequest(user.id, null, query, 'callback_query');
 });

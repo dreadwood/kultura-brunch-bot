@@ -64,10 +64,10 @@ module.exports.Env = {
 
 module.exports.EventCells = {
   LEGEND: 'A1:L1',
-  DATA: 'A3:L9',
+  DATA: 'A3:L',
 };
 
 module.exports.OrderCells = {
   LEGEND: 'A1:L1',
-  DATA: 'A3:L251',
+  DATA: 'A3:L',
 };

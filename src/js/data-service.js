@@ -60,6 +60,28 @@ async function getSheetData(page, legendCells, dataCells) {
   }, {}));
 }
 
+// TODO: 2022-10-31 /
+// async function updateSheetData() {
+//   const apiClient = await getApiClient();
+
+//   const data = await apiClient.values.batchUpdateByDataFilter({
+//     spreadsheetId: SPREADSHEET_ID,
+//     resource: {
+//       valueInputOption: 'USER_ENTERED',
+//       data: {
+//         'dataFilter': {
+//           'a1Range': `${Pages.CLIENTS}!L28`,
+//         },
+//         'values': [
+//           ['test11'],
+//         ],
+//       },
+//     },
+//   });
+
+//   return data;
+// }
+
 // ===============================================
 
 async function getEventsData() {
@@ -70,7 +92,7 @@ async function getEventsData() {
 
 async function getEventData(eventId) {
   const data = await getEventsData();
-  const eventData = data.find((it) => it.id === eventId);
+  const eventData = data.find((it) => it.id.trim() === eventId.trim());
 
   if (!eventData) {
     return null;
@@ -84,7 +106,7 @@ async function getOrdersData() {
 }
 
 function addOrdersData(data) {
-  addSheetData(Pages.CLIENTS, data);
+  addSheetData(`${Pages.CLIENTS}!${OrderCells.DATA}`, data);
 }
 
 
