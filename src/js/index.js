@@ -62,6 +62,7 @@ bot.on('message', (msg, metadata) => {
 
     processRequest(user.id, metadata.type, msg, null);
   } catch (err) {
+    console.error(new Date());
     console.error(err);
     state.initionlState(user);
     screen.chanelUnknownError(CHANEL_ID);
@@ -76,19 +77,38 @@ bot.on('message', (msg, metadata) => {
 bot.on('callback_query', async (query) => {
   const chat = query.message.chat;
   const user = query.from;
-  logger.info(`${user.username} ${user.id} 'QUERY' ${query.data}`);
 
+  /**
+   * CHANEL
+   */
   try {
-    const queryJsonData = JSON.parse(`${query.data }1{!`);
-
     if (chat.id === Number(CHANEL_ID)) {
+      logger.info(`'CHANEL' ${user.username} 'QUERY' ${query.data}`);
+
+      const queryJsonData = JSON.parse(query.data);
       chanelProcess(chat.id, query, queryJsonData);
       return;
     }
+  } catch (err) {
+    logger.error('ERROR');
+    console.error(new Date());
+    console.error(err);
+
+    screen.chanelUnknownError(CHANEL_ID);
+    return;
+  }
+
+  /**
+   * BOT
+   */
+  try {
+    logger.info(`${user.username} ${user.id} 'QUERY' ${query.data}`);
 
     if (!state.checkState(user.id)) {
       state.initionlState(user);
     }
+
+    const queryJsonData = JSON.parse(query.data);
 
     if (queryJsonData.cmd === UserQuery.RESET) {
       state.setState(user.id, {status: OrderStatus.WELCOME});
@@ -96,7 +116,10 @@ bot.on('callback_query', async (query) => {
 
     processRequest(user.id, 'callback_query', null, queryJsonData);
   } catch (err) {
+    logger.error('ERROR');
+    console.error(new Date());
     console.error(err);
+
     state.initionlState(user);
     screen.chanelUnknownError(CHANEL_ID);
     screen.userUnknownError(user.id);
