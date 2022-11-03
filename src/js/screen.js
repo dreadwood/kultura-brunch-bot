@@ -367,6 +367,7 @@ event: ${eventId}
     this._bot.forwardMessage(chanelId, userId, message_id);
   }
 
+
   chanelPaymentData(chanelId, stateUser) {
     const {userName} = stateUser;
 
@@ -375,6 +376,21 @@ username: ${userName}`;
 
     this._bot.sendMessage(chanelId, text);
   }
+
+
+  userUnknownError(userId) {
+    const text = `Простите, произошла непредвиденная ошибка, попробуйте заново. Если ошибка повторилась свяжитесь с ${FEEDBACK_CONTACT}`;
+
+    this._bot.sendMessage(userId, text);
+  }
+
+
+  chanelUnknownError(chanelId) {
+    const text = 'Произошла непредвиденная ошибка, посмотрите логи';
+
+    this._bot.sendMessage(chanelId, text);
+  }
+
 }
 
 module.exports = Screen;

@@ -45,21 +45,28 @@ logger.info('START BOT');
  */
 bot.on('message', (msg, metadata) => {
   const user = msg.from;
+  logger.info(`${user.username} ${user.id} '${metadata.type.toUpperCase()}' ${msg.text || ''}`);
 
-  if (!state.checkState(user.id)) {
+  try {
+    if (!state.checkState(user.id)) {
+      state.initionlState(user);
+    }
+
+    if (msg.text === UserCommands.START.command) {
+      state.setState(user.id, {status: OrderStatus.WELCOME});
+    }
+
+    if (msg.text === UserCommands.RECEIPT.command) {
+      state.setState(user.id, {status: OrderStatus.PAYMENT_RECEIPT_REQUEST});
+    }
+
+    processRequest(user.id, metadata.type, msg, null);
+  } catch (err) {
+    console.error(err);
     state.initionlState(user);
+    screen.chanelUnknownError(CHANEL_ID);
+    screen.userUnknownError(user.id);
   }
-
-  if (msg.text === UserCommands.START.command) {
-    state.setState(user.id, {status: OrderStatus.WELCOME});
-  }
-
-  if (msg.text === UserCommands.RECEIPT.command) {
-    state.setState(user.id, {status: OrderStatus.PAYMENT_RECEIPT_REQUEST});
-  }
-
-  logger.info(`${user.username} '${metadata.type.toUpperCase()}' ${msg.text || ''}`);
-  processRequest(user.id, msg, null, metadata.type);
 });
 
 
@@ -69,33 +76,39 @@ bot.on('message', (msg, metadata) => {
 bot.on('callback_query', async (query) => {
   const chat = query.message.chat;
   const user = query.from;
+  logger.info(`${user.username} ${user.id} 'QUERY' ${query.data}`);
 
-  if (chat.id === Number(CHANEL_ID)) {
-    chanelProcess(chat.id, query);
-    return;
-  }
+  try {
+    const queryJsonData = JSON.parse(`${query.data }1{!`);
 
-  if (!state.checkState(user.id)) {
+    if (chat.id === Number(CHANEL_ID)) {
+      chanelProcess(chat.id, query, queryJsonData);
+      return;
+    }
+
+    if (!state.checkState(user.id)) {
+      state.initionlState(user);
+    }
+
+    if (queryJsonData.cmd === UserQuery.RESET) {
+      state.setState(user.id, {status: OrderStatus.WELCOME});
+    }
+
+    processRequest(user.id, 'callback_query', null, queryJsonData);
+  } catch (err) {
+    console.error(err);
     state.initionlState(user);
+    screen.chanelUnknownError(CHANEL_ID);
+    screen.userUnknownError(user.id);
   }
-
-  // TODO: 2022-11-01 / убрать несколько JSON.parse
-  const {cmd} = JSON.parse(query.data);
-  if (cmd === UserQuery.RESET) {
-    state.setState(user.id, {status: OrderStatus.WELCOME});
-  }
-
-  // TODO: 2022-11-02 / вверх и добавить чат
-  logger.info(`${user.username} 'QUERY' ${query.data}`);
-  processRequest(user.id, null, query, 'callback_query');
 });
 
 
 /**
  * ОБРАБОТЧИК КАНАЛА
  */
-async function chanelProcess(chanelId, query) {
-  const {cmd, orderId} = JSON.parse(query.data);
+async function chanelProcess(chanelId, query, queryJsonData) {
+  const {cmd, orderId} = queryJsonData;
   const adminName = query.from.username;
   const messageId = query.message.message_id;
 
@@ -150,7 +163,7 @@ async function chanelProcess(chanelId, query) {
 /**
  * ОБРАБОТЧИК ПОЛЬЗОВАТЕЛЯ
  */
-async function processRequest(chatId, msg, query, type) {
+async function processRequest(chatId, type, msg, queryJsonData) {
   const stateUser = state.getState(chatId);
 
   switch (stateUser.status) {
@@ -171,7 +184,7 @@ async function processRequest(chatId, msg, query, type) {
 
     case OrderStatus.LIST: {
       if (type === 'callback_query') {
-        const {cmd, eventId} = JSON.parse(query.data);
+        const {cmd, eventId} = queryJsonData;
 
         if (cmd === UserQuery.SELECT) {
           const event = await getEventData(eventId);
@@ -205,7 +218,7 @@ async function processRequest(chatId, msg, query, type) {
 
     case OrderStatus.EVENT: {
       if (type === 'callback_query') {
-        const {cmd} = JSON.parse(query.data);
+        const {cmd} = queryJsonData;
 
         if (cmd === UserQuery.BUY) {
           const {event} = stateUser;
@@ -337,7 +350,7 @@ async function processRequest(chatId, msg, query, type) {
       }
 
       if (type === 'callback_query') {
-        const {cmd} = JSON.parse(query.data);
+        const {cmd} = queryJsonData;
 
         if (cmd === UserQuery.RETURN_POLICY) {
           screen.userReturnPolicy(chatId);
