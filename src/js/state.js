@@ -23,7 +23,7 @@ class State {
       status: OrderStatus.WELCOME,
     };
 
-    logger.info(`${user.username} init`);
+    logger.info(`${user.username} ${user.id} init`);
   }
 
   checkState(id) {
@@ -41,7 +41,7 @@ class State {
       date.event = date.event.id;
     }
 
-    logger.info(`${this._state[id].userName} ${JSON.stringify(date)}`);
+    logger.info(`${this._state[id].userName} ${id} ${JSON.stringify(date)}`);
   }
 
   getState(id) {
