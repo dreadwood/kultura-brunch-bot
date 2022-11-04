@@ -122,7 +122,8 @@ bot.on('callback_query', async (query) => {
 
     state.initionlState(user);
     screen.chanelUnknownError(CHANEL_ID);
-    screen.userUnknownError(user.id);
+    // TODO: 2022-11-04 / temporarily
+    // screen.userUnknownError(user.id);
   }
 });
 
