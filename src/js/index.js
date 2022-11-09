@@ -3,27 +3,28 @@
 const fs = require('fs');
 const path = require('path');
 const TelegramBot = require('node-telegram-bot-api');
+const {nanoid} = require('nanoid');
 const State = require('./state');
 const Screen = require('./screen');
 const helpers = require('./helpers');
 const {getLogger} = require('./logger');
 const {
-  OrderStatus,
   REG_EXP_PHONE,
   RUS_LOCAL,
+  LENGTH_ORDER_ID,
+  OrderStatus,
   // OrderStatusCode,
   ChanelQuery,
   UserQuery,
   UserCommands,
-  LENGTH_ORDER_ID,
 } = require('./const');
+
 const {
   getEventData,
   addOrdersData,
   getOrdersData,
   getEventsData,
 } = require('./data-service');
-const {nanoid} = require('nanoid');
 
 const {BOT_TOKEN, CHANEL_ID} = process.env;
 
@@ -53,11 +54,11 @@ bot.on('message', (msg, metadata) => {
     }
 
     if (msg.text === UserCommands.START.command) {
-      state.setState(user.id, {status: OrderStatus.WELCOME});
+      state.setState(user.id, {status: OrderStatus.BUY_WELCOME});
     }
 
     if (msg.text === UserCommands.RECEIPT.command) {
-      state.setState(user.id, {status: OrderStatus.PAYMENT_RECEIPT_REQUEST});
+      state.setState(user.id, {status: OrderStatus.PAYMENT_REQUEST});
     }
 
     processRequest(user.id, metadata.type, msg, null);
@@ -111,7 +112,7 @@ bot.on('callback_query', async (query) => {
     const queryJsonData = JSON.parse(query.data);
 
     if (queryJsonData.cmd === UserQuery.RESET) {
-      state.setState(user.id, {status: OrderStatus.WELCOME});
+      state.setState(user.id, {status: OrderStatus.BUY_WELCOME});
     }
 
     processRequest(user.id, 'callback_query', null, queryJsonData);
@@ -191,7 +192,7 @@ async function processRequest(chatId, type, msg, queryJsonData) {
   const stateUser = state.getState(chatId);
 
   switch (stateUser.status) {
-    case OrderStatus.WELCOME: {
+    case OrderStatus.BUY_WELCOME: {
       const events = await getEventsData();
 
       if (!events.length) {
@@ -199,14 +200,14 @@ async function processRequest(chatId, type, msg, queryJsonData) {
         return;
       }
 
-      screen.welcome(chatId, events);
+      screen.userList(chatId, events);
 
-      state.setState(chatId, {status: OrderStatus.LIST});
+      state.setState(chatId, {status: OrderStatus.BUY_LIST});
       break;
     }
 
 
-    case OrderStatus.LIST: {
+    case OrderStatus.BUY_LIST: {
       if (type === 'callback_query') {
         const {cmd, eventId} = queryJsonData;
 
@@ -221,26 +222,26 @@ async function processRequest(chatId, type, msg, queryJsonData) {
           const posterPath = path.join(__dirname, '../img', event.poster || '');
 
           if (event.poster && fs.existsSync(posterPath)) {
-            screen.eventWithPoster(chatId, event, posterPath);
+            screen.userEventPoster(chatId, event, posterPath);
           } else {
-            screen.event(chatId, event);
+            screen.userEvent(chatId, event);
           }
 
           state.setState(chatId, {
             event,
-            status: OrderStatus.EVENT,
+            status: OrderStatus.BUY_EVENT,
           });
         }
 
       } else {
         const events = await getEventsData();
-        screen.userListMistake(chatId, events);
+        screen.userList(chatId, events, {repeat: true});
       }
       break;
     }
 
 
-    case OrderStatus.EVENT: {
+    case OrderStatus.BUY_EVENT: {
       if (type === 'callback_query') {
         const {cmd} = queryJsonData;
 
@@ -263,78 +264,83 @@ async function processRequest(chatId, type, msg, queryJsonData) {
           state.setState(chatId, {
             ticketsOnSale,
             startSessionTime: Date.now(),
-            status: OrderStatus.TICKET,
+            status: OrderStatus.BUY_TICKET,
           });
         }
       } else {
-        screen.eventMistake(chatId);
+        screen.userEventAnother(chatId);
       }
       break;
     }
 
 
-    case OrderStatus.TICKET: {
+    case OrderStatus.BUY_TICKET: {
       const {ticketsOnSale, startSessionTime} = stateUser;
 
       // TODO: 2022-10-13 / refactor
       if (helpers.isSessionTimeUp(startSessionTime)) {
         screen.userTimeUp(chatId);
-        state.setState(chatId, {status: OrderStatus.WELCOME});
+        state.setState(chatId, {status: OrderStatus.BUY_WELCOME});
+        return;
+      }
+
+      if (type !== 'text') {
+        screen.userTicket(chatId, ticketsOnSale);
         return;
       }
 
       const enterNumber = Number(msg.text);
 
-      if (type === 'text' && !isNaN(enterNumber)) {
-
-        if (enterNumber > ticketsOnSale || enterNumber < 1) {
-          screen.userTicketSoMany(chatId, ticketsOnSale);
-        } else {
-          screen.name(chatId, enterNumber);
-          state.setState(chatId, {
-            countTicket: enterNumber,
-            status: OrderStatus.NAME,
-          });
-        }
-
-      } else {
+      if (isNaN(enterNumber)) {
         screen.userTicket(chatId, ticketsOnSale);
+        return;
       }
+
+      if (enterNumber > ticketsOnSale || enterNumber < 1) {
+        screen.userTicketSoMany(chatId, ticketsOnSale);
+      } else {
+        screen.userName(chatId, enterNumber);
+        state.setState(chatId, {
+          countTicket: enterNumber,
+          status: OrderStatus.BUY_NAME,
+        });
+      }
+
       break;
     }
 
 
-    case OrderStatus.NAME: {
-      const {startSessionTime} = stateUser;
+    case OrderStatus.BUY_NAME: {
+      const {startSessionTime, countTicket} = stateUser;
 
       // TODO: 2022-10-13 / refactor
       if (helpers.isSessionTimeUp(startSessionTime)) {
         screen.userTimeUp(chatId);
-        state.setState(chatId, {status: OrderStatus.WELCOME});
+        state.setState(chatId, {status: OrderStatus.BUY_WELCOME});
         return;
       }
 
       if (type === 'text') {
         state.setState(chatId, {
           name: msg.text,
-          status: OrderStatus.PHONE,
+          status: OrderStatus.BUY_PHONE,
         });
 
-        screen.phone(chatId);
+        screen.userPhone(chatId);
       } else {
-        screen.nameMistake(chatId);
+        screen.userName(chatId, countTicket);
       }
       break;
     }
 
 
-    case OrderStatus.PHONE: {
+    case OrderStatus.BUY_PHONE: {
       const {startSessionTime, event} = stateUser;
 
       // TODO 2022-10-13 / refactor
       if (helpers.isSessionTimeUp(startSessionTime)) {
         screen.userTimeUp(chatId);
-        state.setState(chatId, {status: OrderStatus.WELCOME});
+        state.setState(chatId, {status: OrderStatus.BUY_WELCOME});
         return;
       }
 
@@ -348,28 +354,28 @@ async function processRequest(chatId, type, msg, queryJsonData) {
             startSessionTime: Date.now(),
             phone: msg.text.replace('+', ''),
             userName: msg.from.username,
-            status: OrderStatus.PAYMENT,
+            status: OrderStatus.BUY_PAYMENT,
           });
 
           screen.userPayment(chatId, event);
         } else {
-          screen.phoneMistake(chatId);
+          screen.userPhone(chatId, {repeat: true});
         }
 
       } else {
-        screen.phone(chatId);
+        screen.userPhone(chatId);
       }
       break;
     }
 
 
-    case OrderStatus.PAYMENT: {
+    case OrderStatus.BUY_PAYMENT: {
       const {startSessionTime} = stateUser;
 
       // TODO: 2022-10-13 / refactor
       if (helpers.isSessionTimeUp(startSessionTime)) {
         screen.userTimeUp(chatId);
-        state.setState(chatId, {status: OrderStatus.WELCOME});
+        state.setState(chatId, {status: OrderStatus.BUY_WELCOME});
         return;
       }
 
@@ -378,16 +384,15 @@ async function processRequest(chatId, type, msg, queryJsonData) {
 
         if (cmd === UserQuery.RETURN_POLICY) {
           screen.userReturnPolicy(chatId);
+          return;
         }
-
-        return;
       }
 
       // добавить таймер для оплаты (10 минут), если не успел отправляет сообщение
       // добавить статус "времено забронено"
       if (type === 'photo' || type === 'document') {
-        screen.check(chatId);
-        state.setState(chatId, {status: OrderStatus.WELCOME});
+        screen.userCheck(chatId);
+        state.setState(chatId, {status: OrderStatus.BUY_WELCOME});
 
         await screen.chanelReceipt(CHANEL_ID, chatId, msg);
         screen.chanelUserDataCheck(CHANEL_ID, stateUser);
@@ -410,26 +415,30 @@ async function processRequest(chatId, type, msg, queryJsonData) {
         return;
       }
 
-      screen.paymentMistake(chatId);
+      screen.userPayment(chatId, null, {repeat: true});
       break;
     }
 
 
-    case OrderStatus.PAYMENT_RECEIPT_REQUEST: {
+    case OrderStatus.PAYMENT_REQUEST: {
       screen.userPaymentRequest(chatId);
 
-      state.setState(chatId, {status: OrderStatus.PAYMENT_DONE});
+      state.setState(chatId, {status: OrderStatus.PAYMENT_RECEIPT});
       break;
     }
 
 
-    case OrderStatus.PAYMENT_DONE: {
+    case OrderStatus.PAYMENT_RECEIPT: {
       if (type === 'photo' || type === 'document') {
         await screen.chanelPaymentReceipt(CHANEL_ID, chatId, msg);
         await screen.chanelPaymentData(CHANEL_ID, stateUser);
         await screen.userPaymentDone(chatId);
-        state.setState(chatId, {status: OrderStatus.WELCOME});
+        state.setState(chatId, {status: OrderStatus.BUY_WELCOME});
+
+        return;
       }
+
+      screen.userPaymentRequest(chatId);
 
       break;
     }

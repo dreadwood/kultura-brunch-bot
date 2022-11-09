@@ -13,35 +13,33 @@ class Screen {
   }
 
 
-  welcome(chatId, events) {
-    const text = 'Здравствуйте!\nНа какую встречу вы хотите записаться?';
+  userList(chatId, events, opt = {}) {
+    const text = opt.repeat
+      ? 'Выберите встречу для записи.'
+      : 'Здравствуйте!\nНа какую встречу вы хотите записаться?';
 
     this._bot.sendMessage(chatId, text, {
       reply_markup: {
-        inline_keyboard: keyboard.welcome(events),
+        inline_keyboard: keyboard.userWelcome(events),
       },
     });
   }
 
 
-  userListMistake(chatId, events) {
-    const text = 'Выберете встречу для записи.';
+  userNoEvents(chatId) {
+    const text = 'Здравствуйте!\nК сожалению, в ближайшее время мероприятий нет.';
 
-    this._bot.sendMessage(chatId, text, {
-      reply_markup: {
-        inline_keyboard: keyboard.welcome(events),
-      },
-    });
+    this._bot.sendMessage(chatId, text);
   }
 
 
-  eventWithPoster(chatId, event, posterPath) {
+  userEventPoster(chatId, event, posterPath) {
     const text = event.description;
 
     this._bot.sendPhoto(chatId, posterPath, {
       caption: text,
       reply_markup: {
-        inline_keyboard: keyboard.event(),
+        inline_keyboard: keyboard.userEvent(),
       },
     }, {
       filename: event.poster,
@@ -50,13 +48,23 @@ class Screen {
   }
 
 
-  event(chatId, event) {
+  userEvent(chatId, event) {
     const text = event.description;
 
     this._bot.sendMessage(chatId, text, {
-      caption: text,
       reply_markup: {
-        inline_keyboard: keyboard.event(),
+        inline_keyboard: keyboard.userEvent(),
+      },
+    });
+  }
+
+
+  userEventAnother(chatId) {
+    const text = 'Хотите выбрать другое мероприятие?';
+
+    this._bot.sendMessage(chatId, text, {
+      reply_markup: {
+        inline_keyboard: keyboard.reset(),
       },
     });
   }
@@ -66,24 +74,6 @@ class Screen {
     const text = 'К сожалению, такого мероприятия нет.';
 
     this._bot.sendMessage(chatId, text);
-  }
-
-
-  userNoEvents(chatId) {
-    const text = 'К сожалению, в ближайшее время мероприятий нет.';
-
-    this._bot.sendMessage(chatId, text);
-  }
-
-
-  eventMistake(chatId) {
-    const text = 'Хотите выбрать другое мероприятие?';
-
-    this._bot.sendMessage(chatId, text, {
-      reply_markup: {
-        inline_keyboard: keyboard.reset(),
-      },
-    });
   }
 
 
@@ -108,55 +98,38 @@ class Screen {
   }
 
 
-  name(chatId, selectedTickets) {
+  userName(chatId, selectedTickets) {
     const text = `Вы выбрали ${selectedTickets} билетов. Напишите, пожалуйста, ваше имя.`;
 
     this._bot.sendMessage(chatId, text);
   }
 
 
-  nameMistake(chatId) {
-    const text = 'Напишите ваше имя, пожалуйста.';
+  userPhone(chatId, opt = {}) {
+    const text = opt.repeat
+      ? 'Оставьте контактный номер телефона (допускаються цифры, пробел и символы "+", "-", "(", ")")'
+      : 'Для бронирования оставьте свой номер телефона';
 
     this._bot.sendMessage(chatId, text);
   }
 
 
-  phone(chatId) {
-    const text = 'Для бронирования оставьте свой номер телефона';
+  async userPayment(chatId, event, opt = {}) {
+    const textRequestReceipt = opt.repeat
+      ? 'Отправьте, пожалуйста, чек об оплате (фото или pdf).'
+      : 'Бронь действительна в течение 10 минут.\nОтправьте, пожалуйста, чек об оплате.';
 
-    this._bot.sendMessage(chatId, text);
-  }
+    if (event) {
+      const textInfoPay = `${event.infopay}\nAccount number / Name:`;
 
+      await this._bot.sendMessage(chatId, textInfoPay);
+      await this._bot.sendMessage(chatId, ACCOUNT_NUMBER);
+      await this._bot.sendMessage(chatId, ACOUNT_NAME);
+    }
 
-  phoneMistake(chatId) {
-    const text = 'Оставьте контактный номер телефона (допускаються цифры, пробел и символы "+", "-", "(", ")")';
-
-    this._bot.sendMessage(chatId, text);
-  }
-
-
-  async userPayment(chatId, event) {
-    const textInfoPay = `${event.infopay}\nAccount number / Name:`;
-    const textRequestReceipt = 'Бронь действительна в течение 10 минут.\nОтправьте, пожалуйста, чек об оплате.';
-
-    await this._bot.sendMessage(chatId, textInfoPay);
-    await this._bot.sendMessage(chatId, ACCOUNT_NUMBER);
-    await this._bot.sendMessage(chatId, ACOUNT_NAME);
     this._bot.sendMessage(chatId, textRequestReceipt, {
       reply_markup: {
-        inline_keyboard: keyboard.payment(),
-      },
-    });
-  }
-
-
-  paymentMistake(chatId) {
-    const text = 'Отправьте, пожалуйста, чек об оплате.';
-
-    this._bot.sendMessage(chatId, text, {
-      reply_markup: {
-        inline_keyboard: keyboard.payment(),
+        inline_keyboard: keyboard.userPayment(),
       },
     });
   }
@@ -173,7 +146,7 @@ class Screen {
   }
 
 
-  check(chatId) {
+  userCheck(chatId) {
     const text = 'Спасибо! Мы забронировали за вами места. В ближайшее время мы проверим оплату.';
 
     this._bot.sendMessage(chatId, text);
@@ -211,6 +184,29 @@ class Screen {
         inline_keyboard: keyboard.reset(),
       },
     });
+  }
+
+
+  async userPaymentRequest(chatId) {
+    const text = 'Отправьте, пожалуйста, чек доплаты (фото или pdf). Реквизиты:\nAccount number / Name';
+
+    await this._bot.sendMessage(chatId, text);
+    await this._bot.sendMessage(chatId, ACCOUNT_NUMBER);
+    await this._bot.sendMessage(chatId, ACOUNT_NAME);
+  }
+
+
+  userPaymentDone(chatId) {
+    const text = 'Спасибо! Будем рады вас видеть снова.';
+
+    this._bot.sendMessage(chatId, text);
+  }
+
+
+  userUnknownError(userId) {
+    const text = `Простите, произошла непредвиденная ошибка, попробуйте заново. Если ошибка повторилась свяжитесь с ${FEEDBACK_CONTACT}`;
+
+    this._bot.sendMessage(userId, text);
   }
 
 
@@ -311,7 +307,7 @@ event: ${eventId}
       chat_id: chanelId,
       message_id: messageId,
       reply_markup: {
-        inline_keyboard: keyboard.chanelNotice(orderId, true),
+        inline_keyboard: keyboard.chanelNotice(orderId, {repeat: true}),
       },
     });
   }
@@ -345,22 +341,6 @@ event: ${eventId}
   }
 
 
-  async userPaymentRequest(chatId) {
-    const text = 'Отправьте, пожалуйста, чек доплаты. Реквизиты:\nAccount number / Name';
-
-    await this._bot.sendMessage(chatId, text);
-    await this._bot.sendMessage(chatId, ACCOUNT_NUMBER);
-    await this._bot.sendMessage(chatId, ACOUNT_NAME);
-  }
-
-
-  userPaymentDone(chatId) {
-    const text = 'Спасибо! Будем рады вас видеть снова.';
-
-    this._bot.sendMessage(chatId, text);
-  }
-
-
   chanelPaymentReceipt(chanelId, userId, msg) {
     const {message_id} = msg;
 
@@ -375,13 +355,6 @@ event: ${eventId}
 username: ${userName}`;
 
     this._bot.sendMessage(chanelId, text);
-  }
-
-
-  userUnknownError(userId) {
-    const text = `Простите, произошла непредвиденная ошибка, попробуйте заново. Если ошибка повторилась свяжитесь с ${FEEDBACK_CONTACT}`;
-
-    this._bot.sendMessage(userId, text);
   }
 
 

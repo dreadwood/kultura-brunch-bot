@@ -11,22 +11,22 @@ module.exports.LENGTH_ORDER_ID = 6;
 module.exports.REG_EXP_PHONE = /^[\d\s\-()+]+$/;
 
 module.exports.OrderStatus = {
-  WELCOME: 'WELCOME', // initional state
-  LIST: 'LIST', // event selection
-  EVENT: 'EVENT', // event info
-  TICKET: 'TICKET', // choosing tickets
-  NAME: 'NAME', // name input
-  PHONE: 'PHONE', // phone input
-  PAYMENT: 'PAYMENT', // payment request
-  PAYMENT_RECEIPT_REQUEST: 'PAYMENT_RECEIPT_REQUEST',
-  PAYMENT_DONE: 'PAYMENT_DONE',
+  BUY_WELCOME: 'BUY_WELCOME',
+  BUY_LIST: 'BUY_LIST',
+  BUY_EVENT: 'BUY_EVENT',
+  BUY_TICKET: 'BUY_TICKET',
+  BUY_NAME: 'BUY_NAME',
+  BUY_PHONE: 'BUY_PHONE',
+  BUY_PAYMENT: 'BUY_PAYMENT',
+  PAYMENT_REQUEST: 'PAYMENT_RECEIPT_REQUEST',
+  PAYMENT_RECEIPT: 'PAYMENT_RECEIPT',
 };
 
-module.exports.OrderStatusCode = {
-  pending: 0,
-  approved: 1,
-  reject: 2,
-};
+// module.exports.OrderStatusCode = {
+//   pending: 0,
+//   approved: 1,
+//   reject: 2,
+// };
 
 module.exports.ChanelQuery = {
   NOTICE: 'notice',

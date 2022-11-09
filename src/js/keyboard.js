@@ -10,7 +10,7 @@ const RESET_BUTTON_TEXT = 'выбрать другое мероприятие';
 module.exports = {
 
   // keyboard by screen name
-  welcome(events) {
+  userWelcome(events) {
     return events.map((event) => [{
       text: `${event.date} / ${event.title}`,
       callback_data: JSON.stringify({
@@ -21,7 +21,7 @@ module.exports = {
   },
 
 
-  event() {
+  userEvent() {
     return [
       [
         {
@@ -43,7 +43,7 @@ module.exports = {
   },
 
 
-  payment() {
+  userPayment() {
     return [
       [
         {
@@ -79,11 +79,11 @@ module.exports = {
   },
 
 
-  chanelNotice(orderId, isRepeat) {
+  chanelNotice(orderId, opt = {}) {
     return [
       [
         {
-          text: `${isRepeat ? 'повторно ' : ''}отправить напоминание`,
+          text: `${opt.repeat ? 'повторно ' : ''}отправить напоминание`,
           callback_data: JSON.stringify({
             cmd: ChanelQuery.NOTICE,
             orderId,
