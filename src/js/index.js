@@ -28,7 +28,7 @@ const {
 
 const {BOT_TOKEN, CHANEL_ID} = process.env;
 
-const logger = getLogger({name: 'commd'});
+const logger = getLogger();
 const bot = new TelegramBot(BOT_TOKEN, {polling: true});
 const state = new State();
 const screen = new Screen(bot);

@@ -3,7 +3,7 @@
 const {OrderStatus} = require('./const');
 const {getLogger} = require('./logger');
 
-const logger = getLogger({name: 'state'});
+const logger = getLogger();
 
 class State {
   constructor() {
@@ -23,7 +23,7 @@ class State {
       status: OrderStatus.WELCOME,
     };
 
-    logger.info(`${user.username} ${user.id} init`);
+    logger.info(`${user.username} ${user.id} 'STATE' init`);
   }
 
   checkState(id) {
@@ -41,7 +41,7 @@ class State {
       date.event = date.event.id;
     }
 
-    logger.info(`${this._state[id].userName} ${id} ${JSON.stringify(date)}`);
+    logger.info(`${this._state[id].userName} ${id} 'STATE' ${JSON.stringify(date)}`);
   }
 
   getState(id) {
