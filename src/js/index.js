@@ -208,68 +208,78 @@ async function processRequest(chatId, type, msg, queryJsonData) {
 
 
     case OrderStatus.BUY_LIST: {
-      if (type === 'callback_query') {
-        const {cmd, eventId} = queryJsonData;
-
-        if (cmd === UserQuery.SELECT) {
-          const event = await getEventData(eventId);
-
-          if (!event) {
-            screen.userEventNotFound(chatId);
-            return;
-          }
-
-          const posterPath = path.join(__dirname, '../img', event.poster || '');
-
-          if (event.poster && fs.existsSync(posterPath)) {
-            screen.userEventPoster(chatId, event, posterPath);
-          } else {
-            screen.userEvent(chatId, event);
-          }
-
-          state.setState(chatId, {
-            event,
-            status: OrderStatus.BUY_EVENT,
-          });
-        }
-
-      } else {
+      if (type !== 'callback_query') {
         const events = await getEventsData();
         screen.userList(chatId, events, {repeat: true});
+        return;
       }
+
+      const {cmd, eventId} = queryJsonData;
+
+      if (cmd !== UserQuery.SELECT) {
+        const events = await getEventsData();
+        screen.userList(chatId, events, {repeat: true});
+        return;
+      }
+
+      const event = await getEventData(eventId);
+
+      if (!event) {
+        screen.userEventNotFound(chatId);
+        return;
+      }
+
+      const posterPath = path.join(__dirname, '../img', event.poster || '');
+
+      if (event.poster && fs.existsSync(posterPath)) {
+        screen.userEventPoster(chatId, event, posterPath);
+      } else {
+        screen.userEvent(chatId, event);
+      }
+
+      state.setState(chatId, {
+        event,
+        status: OrderStatus.BUY_EVENT,
+      });
+
       break;
     }
 
 
     case OrderStatus.BUY_EVENT: {
-      if (type === 'callback_query') {
-        const {cmd} = queryJsonData;
-
-        if (cmd === UserQuery.BUY) {
-          const {event} = stateUser;
-          const orders = await getOrdersData();
-
-          const ordersEvent = orders.filter((order) => order.event_id === event.id);
-          const ticketsOnSale = ordersEvent.reduce(
-            (acc, order) => (acc -= Number(order.ticket)),
-            Number(event.capacity),
-          );
-
-          if (ticketsOnSale <= 0) {
-            screen.userTicketSoldOut(chatId);
-            return;
-          }
-
-          screen.userTicket(chatId, ticketsOnSale);
-          state.setState(chatId, {
-            ticketsOnSale,
-            startSessionTime: Date.now(),
-            status: OrderStatus.BUY_TICKET,
-          });
-        }
-      } else {
+      if (type !== 'callback_query') {
         screen.userEventAnother(chatId);
+        return;
       }
+
+      const {cmd} = queryJsonData;
+
+      if (cmd !== UserQuery.BUY) {
+        screen.userEventAnother(chatId);
+        return;
+      }
+
+      const {event} = stateUser;
+      const orders = await getOrdersData();
+
+      const ordersEvent = orders.filter((order) => order.event_id === event.id);
+      const ticketsOnSale = ordersEvent.reduce(
+        (acc, order) => (acc -= Number(order.ticket)),
+        Number(event.capacity),
+      );
+
+      if (ticketsOnSale <= 0) {
+        screen.userTicketSoldOut(chatId);
+        return;
+      }
+
+      screen.userTicket(chatId, ticketsOnSale);
+      state.setState(chatId, {
+        ticketsOnSale,
+        startSessionTime: Date.now(),
+        status: OrderStatus.BUY_TICKET,
+      });
+
       break;
     }
 
