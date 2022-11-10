@@ -262,7 +262,7 @@ async function processRequest(chatId, type, msg, queryJsonData) {
       const {event} = stateUser;
       const orders = await getOrdersData();
 
-      const ordersEvent = orders.filter((order) => order.event_id === event.id);
+      const ordersEvent = orders.filter((order) => order.event_id.trim() === event.id.trim());
       const ticketsOnSale = ordersEvent.reduce(
         (acc, order) => (acc -= Number(order.ticket)),
         Number(event.capacity),
