@@ -371,7 +371,7 @@ event: ${eventId}
     const {userName} = stateUser;
 
     const text = `ДОПЛАТА 💰
-username: ${userName}`;
+username: @${userName}`;
 
     this._bot.sendMessage(chanelId, text);
   }
