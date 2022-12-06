@@ -32,6 +32,7 @@ module.exports.ChanelQuery = {
   NOTICE: 'notice',
   CONFIRM: 'confirm',
   REJECT: 'reject',
+  REVIEW: 'review',
 };
 
 module.exports.UserQuery = {

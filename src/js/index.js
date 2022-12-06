@@ -177,6 +177,17 @@ async function chanelProcess(chanelId, query, queryJsonData) {
     }
 
 
+    case ChanelQuery.REVIEW: {
+      if (event.notice) {
+        await screen.userGetReview(userId);
+        screen.chanelGetUserReview(chanelId, adminName, userOrder);
+      } else {
+        screen.chanelNoNotice(chanelId);
+      }
+      break;
+    }
+
+
     default: {
       screen.chanelBadRequest(chanelId, adminName);
       break;

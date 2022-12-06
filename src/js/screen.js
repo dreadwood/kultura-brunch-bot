@@ -203,6 +203,13 @@ class Screen {
   }
 
 
+  userGetReview(chatId) {
+    const text = 'Спасибо, что посетили нас! Будем рады если вы оставите о нас отзыв. Хорошего дня!';
+
+    this._bot.sendMessage(chatId, text);
+  }
+
+
   userUnknownError(userId) {
     const text = `Простите, произошла непредвиденная ошибка, попробуйте заново. Если ошибка повторилась свяжитесь с ${FEEDBACK_CONTACT}`;
 
@@ -221,7 +228,7 @@ class Screen {
     const {event, name, phone, countTicket, userName, orderId} = stateUser;
 
     const text = `Имя: ${name}
-username: ${userName}
+username: @${userName}
 phone: ${phone}
 ticket: ${countTicket}
 event: ${event.id}`;
@@ -244,7 +251,7 @@ event: ${event.id}`;
     } = userOrder;
 
     const text = `Имя: ${name}
-username: ${userName}
+username: @${userName}
 phone: ${phone}
 ticket: ${countTicket}
 event: ${eventId}
@@ -271,7 +278,7 @@ event: ${eventId}
     } = userOrder;
 
     const text = `Имя: ${name}
-username: ${userName}
+username: @${userName}
 phone: ${phone}
 ticket: ${countTicket}
 event: ${eventId}
@@ -296,7 +303,7 @@ event: ${eventId}
     } = userOrder;
 
     const text = `Имя: ${name}
-username: ${userName}
+username: @${userName}
 phone: ${phone}
 ticket: ${countTicket}
 event: ${eventId}
@@ -310,6 +317,18 @@ event: ${eventId}
         inline_keyboard: keyboard.chanelNotice(orderId, {repeat: true}),
       },
     });
+  }
+
+
+  chanelGetUserReview(chanelId, adminName, userOrder) {
+    const {
+      event_id: eventId,
+      username: userName,
+    } = userOrder;
+
+    const text = `Запросили отзыв о мероприятии ${eventId} у @${userName}. @${adminName}`;
+
+    this._bot.sendMessage(chanelId, text);
   }
 
 

@@ -90,6 +90,15 @@ module.exports = {
           }),
         },
       ],
+      [
+        {
+          text: 'запросить отзыв',
+          callback_data: JSON.stringify({
+            cmd: ChanelQuery.REVIEW,
+            orderId,
+          }),
+        },
+      ],
     ];
   },
 
