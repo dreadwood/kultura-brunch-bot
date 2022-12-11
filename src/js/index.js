@@ -150,8 +150,15 @@ async function chanelProcess(chanelId, query, queryJsonData) {
 
   const {user_id: userId, username: userName} = userOrder;
   const event = await getEventData(userOrder.event_id);
-  if (!event) {
-    screen.chanelNoEvent(chanelId);
+  /**
+   * FIXME:
+   * 2022-12-11 времено
+   * убрать проверку на запрос из условия
+   * сейчас getEventData не возвращает прошедшие события
+   * поэтому невозможно получить отзыв если событие прошло
+   */
+  if (cmd !== ChanelQuery.REVIEW && !event) {
+    screen.chanelNoEvent(chanelId, adminName);
     return;
   }
 
@@ -182,13 +189,9 @@ async function chanelProcess(chanelId, query, queryJsonData) {
 
 
     case ChanelQuery.REVIEW: {
-      if (event.notice) {
-        state.setState(userId, {status: OrderStatus.FEEDBACK_REQUEST, userName, orderId});
-        await screen.userGetReview(userId);
-        screen.chanelGetUserReview(chanelId, adminName, userOrder);
-      } else {
-        screen.chanelNoNotice(chanelId);
-      }
+      state.setState(userId, {status: OrderStatus.FEEDBACK_REQUEST, userName, orderId});
+      await screen.userGetReview(userId);
+      screen.chanelGetUserReview(chanelId, adminName, userOrder);
       break;
     }
 
