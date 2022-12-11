@@ -204,7 +204,16 @@ class Screen {
 
 
   userGetReview(chatId) {
-    const text = 'Спасибо, что посетили нас! Будем рады если вы оставите о нас отзыв. Хорошего дня!';
+    const text = `Здравствуйте!
+Спасибо большое, что присоединились к нашей встрече! Мы будем рады, если вы поделитесь с нами своим мнением о мероприятии, спикере и формате. Так мы сможем сделать наши встречи еще лучше.
+Для того чтобы отправить отзыв, ответьте одним сообщением (это может быть текст или аудисообщение).`;
+
+    this._bot.sendMessage(chatId, text);
+  }
+
+
+  userFeedbackThanks(chatId) {
+    const text = 'Спасибо за отзыв!';
 
     this._bot.sendMessage(chatId, text);
   }
@@ -374,6 +383,24 @@ event: ${eventId}
 username: @${userName}`;
 
     this._bot.sendMessage(chanelId, text);
+  }
+
+
+  chanelFeedbackMessage(chanelId, userId, msg) {
+    const {message_id} = msg;
+
+    return this._bot.forwardMessage(chanelId, userId, message_id);
+  }
+
+
+  chanelFeedbackData(chanelId, stateUser) {
+    const {userName, orderId} = stateUser;
+
+    const text = `ОТЗЫВ:
+username: @${userName}
+order: ${orderId}`;
+
+    return this._bot.sendMessage(chanelId, text);
   }
 
 

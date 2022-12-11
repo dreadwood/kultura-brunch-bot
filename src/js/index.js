@@ -61,6 +61,10 @@ bot.on('message', (msg, metadata) => {
       state.setState(user.id, {status: OrderStatus.PAYMENT_REQUEST});
     }
 
+    if (msg.text === UserCommands.FEEDBACK.command) {
+      state.setState(user.id, {status: OrderStatus.FEEDBACK_REQUEST});
+    }
+
     processRequest(user.id, metadata.type, msg, null);
   } catch (err) {
     console.error(new Date());
@@ -144,7 +148,7 @@ async function chanelProcess(chanelId, query, queryJsonData) {
     return;
   }
 
-  const {user_id: userId} = userOrder;
+  const {user_id: userId, username: userName} = userOrder;
   const event = await getEventData(userOrder.event_id);
   if (!event) {
     screen.chanelNoEvent(chanelId);
@@ -179,6 +183,7 @@ async function chanelProcess(chanelId, query, queryJsonData) {
 
     case ChanelQuery.REVIEW: {
       if (event.notice) {
+        state.setState(userId, {status: OrderStatus.FEEDBACK_REQUEST, userName, orderId});
         await screen.userGetReview(userId);
         screen.chanelGetUserReview(chanelId, adminName, userOrder);
       } else {
@@ -240,7 +245,7 @@ async function processRequest(chatId, type, msg, queryJsonData) {
         return;
       }
 
-      const posterPath = path.join(__dirname, '../img', event.poster || '');
+      const posterPath = path.join(__dirname, '../img', event.poster || ''); // FIXME:
 
       if (event.poster && fs.existsSync(posterPath)) {
         screen.userEventPoster(chatId, event, posterPath);
@@ -462,6 +467,15 @@ async function processRequest(chatId, type, msg, queryJsonData) {
       screen.userPaymentRequest(chatId);
 
       break;
+    }
+
+
+    case OrderStatus.FEEDBACK_REQUEST: {
+      await screen.chanelFeedbackData(CHANEL_ID, stateUser);
+      await screen.chanelFeedbackMessage(CHANEL_ID, chatId, msg);
+      await screen.userFeedbackThanks(chatId);
+
+      state.setState(chatId, {status: OrderStatus.BUY_WELCOME});
     }
   }
 }

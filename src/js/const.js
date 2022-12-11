@@ -20,6 +20,7 @@ module.exports.OrderStatus = {
   BUY_PAYMENT: 'BUY_PAYMENT',
   PAYMENT_REQUEST: 'PAYMENT_RECEIPT_REQUEST',
   PAYMENT_RECEIPT: 'PAYMENT_RECEIPT',
+  FEEDBACK_REQUEST: 'FEEDBACK_REQUEST',
 };
 
 // module.exports.OrderStatusCode = {
@@ -32,7 +33,7 @@ module.exports.ChanelQuery = {
   NOTICE: 'notice',
   CONFIRM: 'confirm',
   REJECT: 'reject',
-  REVIEW: 'review',
+  REVIEW: 'review', // FEEDBACK
 };
 
 module.exports.UserQuery = {
@@ -50,6 +51,10 @@ module.exports.UserCommands = {
   RECEIPT: {
     command: '/receipt',
     description: 'Отправить чек доплаты',
+  },
+  FEEDBACK: {
+    command: '/feedback', // REVIEW
+    description: 'Отправить отзыв',
   },
 };
 
