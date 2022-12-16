@@ -18,9 +18,13 @@ module.exports.OrderStatus = {
   BUY_NAME: 'BUY_NAME',
   BUY_PHONE: 'BUY_PHONE',
   BUY_PAYMENT: 'BUY_PAYMENT',
+
   PAYMENT_REQUEST: 'PAYMENT_RECEIPT_REQUEST',
   PAYMENT_RECEIPT: 'PAYMENT_RECEIPT',
+
   FEEDBACK_REQUEST: 'FEEDBACK_REQUEST',
+
+  ADMIN_WELCOME: 'ADMIN_WELCOME',
 };
 
 // module.exports.OrderStatusCode = {
@@ -43,6 +47,12 @@ module.exports.UserQuery = {
   BUY: 'buy',
 };
 
+module.exports.AdminQuery = {
+  TICKET: 'ticket',
+  LIST: 'list',
+  MESSAGE: 'message',
+};
+
 module.exports.UserCommands = {
   START: {
     command: '/start',
@@ -55,6 +65,10 @@ module.exports.UserCommands = {
   FEEDBACK: {
     command: '/feedback', // REVIEW
     description: 'Отправить отзыв',
+  },
+  ADMIN: {
+    command: '/admin',
+    description: '🤫',
   },
 };
 

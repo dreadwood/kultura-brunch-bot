@@ -410,6 +410,43 @@ order: ${orderId}`;
     this._bot.sendMessage(chanelId, text);
   }
 
+
+  adminWelcome(chatId) {
+    const text = 'Гамарджоба, администратор. Что будем делать?';
+
+    this._bot.sendMessage(chatId, text, {
+      reply_markup: {
+        inline_keyboard: keyboard.adminWelcome(chatId),
+      },
+    });
+  }
+
+
+  adminNoEvents(chatId) {
+    const text = 'В настоящее время мероприятий нет. 😢';
+
+    this._bot.sendMessage(chatId, text, {
+      reply_markup: {
+        inline_keyboard: keyboard.adminWelcome(chatId),
+      },
+    });
+  }
+
+
+  adminTicket(chatId, eventsInfo) {
+    const text = eventsInfo.map((event) => (
+      `${event.title}
+Всего билетов: <b>${event.capacity}</b> / Осталось: <b>${event.available}</b>\n\n`
+    )).join('');
+
+    this._bot.sendMessage(chatId, text, {
+      parse_mode: 'HTML',
+      reply_markup: {
+        inline_keyboard: keyboard.adminWelcome(chatId),
+      },
+    });
+  }
+
 }
 
 module.exports = Screen;

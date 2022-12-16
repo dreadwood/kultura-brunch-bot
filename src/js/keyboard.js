@@ -3,6 +3,7 @@
 const {
   ChanelQuery,
   UserQuery,
+  AdminQuery,
 } = require('./const');
 
 const RESET_BUTTON_TEXT = 'выбрать другое мероприятие';
@@ -96,6 +97,39 @@ module.exports = {
           callback_data: JSON.stringify({
             cmd: ChanelQuery.REVIEW,
             orderId,
+          }),
+        },
+      ],
+    ];
+  },
+
+
+  adminWelcome(adminId) {
+    return [
+      [
+        {
+          text: 'проданные билеты',
+          callback_data: JSON.stringify({
+            cmd: AdminQuery.TICKET,
+            admin: adminId,
+          }),
+        },
+      ],
+      [
+        {
+          text: 'списки клиентов 🛠',
+          callback_data: JSON.stringify({
+            cmd: AdminQuery.LIST,
+            admin: adminId,
+          }),
+        },
+      ],
+      [
+        {
+          text: 'отправка сообщения клиенту 🛠',
+          callback_data: JSON.stringify({
+            cmd: AdminQuery.MESSAGE,
+            admin: adminId,
           }),
         },
       ],

@@ -17,6 +17,7 @@ const {
   ChanelQuery,
   UserQuery,
   UserCommands,
+  AdminQuery,
 } = require('./const');
 
 const {
@@ -26,12 +27,13 @@ const {
   getEventsData,
 } = require('./data-service');
 
-const {BOT_TOKEN, CHANEL_ID} = process.env;
+const {BOT_TOKEN, CHANEL_ID, ADMINS} = process.env;
 
 const logger = getLogger();
 const bot = new TelegramBot(BOT_TOKEN, {polling: true});
 const state = new State();
 const screen = new Screen(bot);
+const admins = ADMINS.split(' ');
 
 bot.setMyCommands([
   UserCommands.START,
@@ -42,7 +44,7 @@ logger.info('START BOT');
 
 
 /**
- * ОТПРАВКА ДАННЫХ
+ * ОТПРАВКА ДАННЫХ (ТЕКСТ, ФОТО, АУДИО И ПРОЧЕЕ)
  */
 bot.on('message', (msg, metadata) => {
   const user = msg.from;
@@ -63,6 +65,12 @@ bot.on('message', (msg, metadata) => {
 
     if (msg.text === UserCommands.FEEDBACK.command) {
       state.setState(user.id, {status: OrderStatus.FEEDBACK_REQUEST});
+    }
+
+    if (msg.text === UserCommands.ADMIN.command) {
+      if (helpers.isAdmin(user.id, admins)) {
+        state.setState(user.id, {status: OrderStatus.ADMIN_WELCOME});
+      }
     }
 
     processRequest(user.id, metadata.type, msg, null);
@@ -468,7 +476,6 @@ async function processRequest(chatId, type, msg, queryJsonData) {
       }
 
       screen.userPaymentRequest(chatId);
-
       break;
     }
 
@@ -479,6 +486,45 @@ async function processRequest(chatId, type, msg, queryJsonData) {
       await screen.userFeedbackThanks(chatId);
 
       state.setState(chatId, {status: OrderStatus.BUY_WELCOME});
+      break;
     }
+
+
+    case OrderStatus.ADMIN_WELCOME: {
+      if (type !== 'callback_query') {
+        screen.adminWelcome(chatId);
+        return;
+      }
+
+      const {cmd} = queryJsonData;
+
+      if (cmd === AdminQuery.TICKET) {
+        const events = await getEventsData();
+
+        if (!events.length) {
+          screen.adminNoEvents(chatId);
+          return;
+        }
+
+        const orders = await getOrdersData();
+
+        const eventsInfo = events.map((event) => ({
+          id: event.id,
+          title: event.title,
+          capacity: event.capacity,
+          available: Number(event.capacity),
+        }));
+
+        orders.forEach((order) => eventsInfo.forEach((it) => {
+          if (it.id === order.event_id) {
+            it.available = it.available - Number(order.ticket);
+          }
+        }));
+
+        screen.adminTicket(chatId, eventsInfo);
+      }
+      break;
+    }
+
   }
 }
