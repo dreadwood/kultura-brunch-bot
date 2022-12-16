@@ -512,7 +512,7 @@ async function processRequest(chatId, type, msg, queryJsonData) {
           if (event.id === order.event_id) {
             event.available = event.available
               ? event.available - Number(order.ticket)
-              : event.capacity;
+              : event.capacity - Number(order.ticket);
           }
         }));
 
