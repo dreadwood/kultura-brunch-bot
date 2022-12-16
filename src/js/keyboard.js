@@ -117,7 +117,7 @@ module.exports = {
       ],
       [
         {
-          text: 'списки клиентов 🛠',
+          text: 'списки клиентов',
           callback_data: JSON.stringify({
             cmd: AdminQuery.LIST,
             admin: adminId,

@@ -433,11 +433,35 @@ order: ${orderId}`;
   }
 
 
-  adminTicket(chatId, eventsInfo) {
-    const text = eventsInfo.map((event) => (
+  adminTicket(chatId, events) {
+    const text = events.map((event) => (
       `${event.title}
-Всего билетов: <b>${event.capacity}</b> / Осталось: <b>${event.available}</b>\n\n`
-    )).join('');
+Всего билетов: <b>${event.capacity}</b> / Осталось: <b>${event.available}</b>`
+    )).join('\n\n');
+
+    this._bot.sendMessage(chatId, text, {
+      parse_mode: 'HTML',
+      reply_markup: {
+        inline_keyboard: keyboard.adminWelcome(chatId),
+      },
+    });
+  }
+
+
+  adminList(chatId, events) {
+    const getTextPerson = (persons) => persons.map((person) => {
+      const name = person.name
+        ? `<b>${person.name}</b>`
+        : `Имя неизвестно, <b>${person.userId}</b>`;
+      const phone = person.phone ? person.phone : 'нет';
+      const username = person.username ? `@${person.username}` : 'нет';
+
+      return `${name}, кол-во билетов: ${person.ticket}
+tel: ${phone} / tg: ${username}`;
+    }).join('\n');
+
+    const text = events.map((event) => `<b>${event.title}</b>
+${getTextPerson(event.persons)}`).join('\n\n');
 
     this._bot.sendMessage(chatId, text, {
       parse_mode: 'HTML',
