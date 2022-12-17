@@ -31,4 +31,14 @@ module.exports = {
   isAdmin(userId, admins) {
     return admins.includes(userId.toString());
   },
+
+  /**
+  * Определяет одинаковые id
+  * @param {string} firstId
+  * @param {string} secondId
+  * @returns {boolean}
+  */
+  isSameId(firstId, secondId) {
+    return firstId.trim() === secondId.trim();
+  },
 };

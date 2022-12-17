@@ -226,10 +226,25 @@ class Screen {
   }
 
 
+  async userAdminMessage(userId, text) {
+    return this._bot.sendMessage(userId, text);
+  }
+
+
   chanelReceipt(chanelId, userId, msg) {
     const {message_id} = msg;
 
     this._bot.forwardMessage(chanelId, userId, message_id);
+  }
+
+
+  chanelAdminUserMsg(chanelId, userId, msg) {
+    const text = `@${msg.chat.username} отрпавил пользователю ${userId} сообщение:
+<i>${msg.text}</i>`;
+
+    this._bot.sendMessage(chanelId, text, {
+      parse_mode: 'HTML',
+    });
   }
 
 
@@ -469,6 +484,39 @@ ${getTextPerson(event.persons)}`).join('\n\n');
         inline_keyboard: keyboard.adminWelcome(chatId),
       },
     });
+  }
+
+
+  adminMessageRequestId(chatId) {
+    const text = 'Напишите id пользователя, которому нужно отправить сообщение (номер из цифр).';
+
+    this._bot.sendMessage(chatId, text);
+  }
+
+
+  adminMessageRequestText(chatId) {
+    const text = 'Напишите сообщение, которое нужно отправить (только текст). Учитывайте, что отредактировать или отменить отправку нельзя.';
+
+    this._bot.sendMessage(chatId, text);
+  }
+
+
+  adminMessageDone(chatId) {
+    const text = 'Сообщение пользователю было отправлено.';
+
+    this._bot.sendMessage(chatId, text, {
+      parse_mode: 'HTML',
+      reply_markup: {
+        inline_keyboard: keyboard.adminWelcome(chatId),
+      },
+    });
+  }
+
+
+  adminMessageError(chatId) {
+    const text = 'При отправки сообщения произошла ошибка. Возможно бот у пользователя остановлен.';
+
+    this._bot.sendMessage(chatId, text);
   }
 
 }

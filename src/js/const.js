@@ -25,6 +25,8 @@ module.exports.OrderStatus = {
   FEEDBACK_REQUEST: 'FEEDBACK_REQUEST',
 
   ADMIN_WELCOME: 'ADMIN_WELCOME',
+  ADMIN_MESSAGE_ID: 'ADMIN_MESSAGE_ID',
+  ADMIN_MESSAGE_TEXT: 'ADMIN_MESSAGE_TEXT',
 };
 
 // module.exports.OrderStatusCode = {

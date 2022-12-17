@@ -75,8 +75,7 @@ bot.on('message', (msg, metadata) => {
 
     processRequest(user.id, metadata.type, msg, null);
   } catch (err) {
-    console.error(new Date());
-    console.error(err);
+    console.error(new Date(), err);
     state.initionlState(user);
     screen.chanelUnknownError(CHANEL_ID);
     screen.userUnknownError(user.id);
@@ -104,8 +103,7 @@ bot.on('callback_query', async (query) => {
     }
   } catch (err) {
     logger.error('ERROR');
-    console.error(new Date());
-    console.error(err);
+    console.error(new Date(), err);
 
     screen.chanelUnknownError(CHANEL_ID);
     return;
@@ -130,8 +128,7 @@ bot.on('callback_query', async (query) => {
     processRequest(user.id, 'callback_query', null, queryJsonData);
   } catch (err) {
     logger.error('ERROR');
-    console.error(new Date());
-    console.error(err);
+    console.error(new Date(), err);
 
     state.initionlState(user);
     screen.chanelUnknownError(CHANEL_ID);
@@ -289,7 +286,7 @@ async function processRequest(chatId, type, msg, queryJsonData) {
       const {event} = stateUser;
       const orders = await getOrdersData();
 
-      const ordersEvent = orders.filter((order) => order.event_id.trim() === event.id.trim());
+      const ordersEvent = orders.filter((order) => helpers.isSameId(order.event_id, event.id));
       const ticketsOnSale = ordersEvent.reduce(
         (acc, order) => (acc -= Number(order.ticket)),
         Number(event.capacity),
@@ -509,7 +506,7 @@ async function processRequest(chatId, type, msg, queryJsonData) {
         const orders = await getOrdersData();
 
         orders.forEach((order) => events.forEach((event) => {
-          if (event.id === order.event_id) {
+          if (helpers.isSameId(event.id, order.event_id)) {
             event.available = event.available
               ? event.available - Number(order.ticket)
               : event.capacity - Number(order.ticket);
@@ -530,7 +527,7 @@ async function processRequest(chatId, type, msg, queryJsonData) {
         const orders = await getOrdersData();
 
         orders.forEach((order) => events.forEach((event) => {
-          if (event.id === order.event_id) {
+          if (helpers.isSameId(event.id, order.event_id)) {
             const person = {
               name: order.name,
               ticket: order.ticket,
@@ -545,6 +542,50 @@ async function processRequest(chatId, type, msg, queryJsonData) {
         }));
 
         screen.adminList(chatId, events);
+      }
+
+      if (cmd === AdminQuery.MESSAGE) {
+        screen.adminMessageRequestId(chatId);
+        state.setState(chatId, {status: OrderStatus.ADMIN_MESSAGE_ID});
+      }
+      break;
+    }
+
+
+    case OrderStatus.ADMIN_MESSAGE_ID: {
+      const enterId = Number(msg.text);
+
+      if (isNaN(enterId)) {
+        screen.adminMessageRequestId(chatId);
+        return;
+      }
+
+      screen.adminMessageRequestText(chatId);
+
+      state.setState(chatId, {
+        userIdMessage: enterId,
+        status: OrderStatus.ADMIN_MESSAGE_TEXT,
+      });
+      break;
+    }
+
+
+    case OrderStatus.ADMIN_MESSAGE_TEXT: {
+      if (type !== 'text') {
+        screen.adminMessageRequestText(chatId);
+        return;
+      }
+
+      const {userIdMessage} = stateUser;
+
+      try {
+        await screen.userAdminMessage(userIdMessage, msg.text);
+        screen.adminMessageDone(chatId);
+        screen.chanelAdminUserMsg(CHANEL_ID, chatId, msg);
+        state.setState(chatId, {status: OrderStatus.ADMIN_WELCOME});
+      } catch (err) {
+        screen.adminMessageError(CHANEL_ID);
+        console.error(new Date(), err.code, err.response?.body?.description);
       }
       break;
     }

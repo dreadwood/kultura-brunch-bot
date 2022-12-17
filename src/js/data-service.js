@@ -92,7 +92,7 @@ async function getEventsData() {
 
 async function getEventData(eventId) {
   const data = await getEventsData();
-  const eventData = data.find((it) => it.id.trim() === eventId.trim());
+  const eventData = data.find((event) => helpers.isSameId(event.id, eventId));
 
   if (!eventData) {
     return null;

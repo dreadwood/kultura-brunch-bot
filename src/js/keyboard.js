@@ -126,7 +126,7 @@ module.exports = {
       ],
       [
         {
-          text: 'отправка сообщения клиенту 🛠',
+          text: 'отправка сообщения клиенту',
           callback_data: JSON.stringify({
             cmd: AdminQuery.MESSAGE,
             admin: adminId,
