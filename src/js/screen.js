@@ -239,7 +239,7 @@ class Screen {
 
 
   chanelAdminUserMsg(chanelId, userId, msg) {
-    const text = `@${msg.chat.username} отрпавил пользователю ${userId} сообщение:
+    const text = `@${msg.chat.username} отправил пользователю ${userId} сообщение:
 <i>${msg.text}</i>`;
 
     this._bot.sendMessage(chanelId, text, {

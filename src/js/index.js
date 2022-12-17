@@ -581,7 +581,7 @@ async function processRequest(chatId, type, msg, queryJsonData) {
       try {
         await screen.userAdminMessage(userIdMessage, msg.text);
         screen.adminMessageDone(chatId);
-        screen.chanelAdminUserMsg(CHANEL_ID, chatId, msg);
+        screen.chanelAdminUserMsg(CHANEL_ID, userIdMessage, msg);
         state.setState(chatId, {status: OrderStatus.ADMIN_WELCOME});
       } catch (err) {
         screen.adminMessageError(CHANEL_ID);
