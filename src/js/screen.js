@@ -1,5 +1,6 @@
 'use strict';
 
+const helpers = require('./helpers');
 const keyboard = require('./keyboard');
 const {
   FEEDBACK_CONTACT,
@@ -99,7 +100,8 @@ class Screen {
 
 
   userName(chatId, selectedTickets) {
-    const text = `Вы выбрали ${selectedTickets} билетов. Напишите, пожалуйста, ваше имя.`;
+    const tiketWord = helpers.declOfNum(selectedTickets, ['билет', 'билета', 'билетов']);
+    const text = `Вы выбрали ${selectedTickets} ${tiketWord}. Напишите, пожалуйста, ваше имя.`;
 
     this._bot.sendMessage(chatId, text);
   }
@@ -114,13 +116,27 @@ class Screen {
   }
 
 
-  async userPayment(chatId, event, opt = {}) {
+  async userPayment(chatId, event, selectedTickets, opt = {}) {
     const textRequestReceipt = opt.repeat
       ? 'Отправьте, пожалуйста, чек об оплате (фото или pdf).'
       : 'Бронь действительна в течение 10 минут.\nОтправьте, пожалуйста, чек об оплате.';
 
     if (event) {
-      const textInfoPay = `${event.infopay}\nAccount number / Name:`;
+      const tiketWord = helpers.declOfNum(selectedTickets, ['билет', 'билета', 'билетов']);
+      const appointmentWord = `мест${selectedTickets === 1 ? 'а' : ''}`;
+
+      const info = event.infopay ? `\n${ event.infopay}` : '';
+      const fullPrice = Number(event.full_price) * selectedTickets;
+      const bookingPrice = Number(event.booking_price) * selectedTickets;
+      const bookingInfo = Number(event.full_price) === Number(event.booking_price)
+        ? `Для брони ${appointmentWord} необходимо внести полную стоимость.`
+        : `Для брони ${appointmentWord} необходимо внести ${bookingPrice} gel (за ${selectedTickets} ${tiketWord}).`;
+
+      const textInfoPay = `Спасибо! Стоимость участия: ${fullPrice} gel (${selectedTickets} ${tiketWord}).${info}
+
+${bookingInfo}
+Перевести можно вот сюда (BOG)
+Account number / Name:`;
 
       await this._bot.sendMessage(chatId, textInfoPay);
       await this._bot.sendMessage(chatId, ACCOUNT_NUMBER);

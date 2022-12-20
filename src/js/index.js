@@ -369,7 +369,7 @@ async function processRequest(chatId, type, msg, queryJsonData) {
 
 
     case OrderStatus.BUY_PHONE: {
-      const {startSessionTime, event} = stateUser;
+      const {startSessionTime, event, countTicket} = stateUser;
 
       // TODO 2022-10-13 / refactor
       if (helpers.isSessionTimeUp(startSessionTime)) {
@@ -391,7 +391,7 @@ async function processRequest(chatId, type, msg, queryJsonData) {
             status: OrderStatus.BUY_PAYMENT,
           });
 
-          screen.userPayment(chatId, event);
+          screen.userPayment(chatId, event, countTicket);
         } else {
           screen.userPhone(chatId, {repeat: true});
         }
@@ -449,7 +449,7 @@ async function processRequest(chatId, type, msg, queryJsonData) {
         return;
       }
 
-      screen.userPayment(chatId, null, {repeat: true});
+      screen.userPayment(chatId, null, null, {repeat: true});
       break;
     }
 
