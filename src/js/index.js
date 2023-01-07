@@ -526,22 +526,32 @@ async function processRequest(chatId, type, msg, queryJsonData) {
 
         const orders = await getOrdersData();
 
-        orders.forEach((order) => events.forEach((event) => {
-          if (helpers.isSameId(event.id, order.event_id)) {
-            const person = {
-              name: order.name,
-              ticket: order.ticket,
-              phone: order.phone,
-              username: order.username,
-              userId: order.user_id,
-            };
-            event.persons = event.persons
-              ? [...event.persons, person]
-              : [person];
-          }
-        }));
+        // TODO: 2023-01-07 / move to other function
+        const eventsWithContacts = events.reduce((accEvents, event) => {
 
-        screen.adminList(chatId, events);
+          // TODO: 2023-01-07 / move to other function
+          const eventWithContacts = orders.reduce((accOrders, order) => {
+            if (helpers.isSameId(event.id, order.event_id)) {
+              accOrders.persons.push({
+                name: order.name,
+                ticket: order.ticket,
+                phone: order.phone,
+                username: order.username,
+                userId: order.user_id,
+              });
+            }
+
+            return accOrders;
+          }, {title: event.title, persons: []});
+
+          if (eventWithContacts.persons.length !== 0) {
+            accEvents.push(eventWithContacts);
+          }
+
+          return accEvents;
+        }, []);
+
+        screen.adminList(chatId, eventsWithContacts);
       }
 
       if (cmd === AdminQuery.MESSAGE) {

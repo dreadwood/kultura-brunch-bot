@@ -479,7 +479,7 @@ order: ${orderId}`;
   }
 
 
-  adminList(chatId, events) {
+  adminList(chatId, eventsWithContacts) {
     const getTextPerson = (persons) => persons.map((person) => {
       const name = person.name
         ? `<b>${person.name}</b>`
@@ -491,7 +491,7 @@ order: ${orderId}`;
 tel: ${phone} / tg: ${username}`;
     }).join('\n');
 
-    const text = events.map((event) => `<b>${event.title}</b>
+    const text = eventsWithContacts.map((event) => `<b>${event.title}</b>
 ${getTextPerson(event.persons)}`).join('\n\n');
 
     this._bot.sendMessage(chatId, text, {
