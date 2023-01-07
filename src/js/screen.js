@@ -2,6 +2,7 @@
 
 const helpers = require('./helpers');
 const keyboard = require('./keyboard');
+const textMarkup = require('./text-markup');
 const {
   FEEDBACK_CONTACT,
   ACOUNT_NAME,
@@ -480,19 +481,7 @@ order: ${orderId}`;
 
 
   adminList(chatId, eventsWithContacts) {
-    const getTextPerson = (persons) => persons.map((person) => {
-      const name = person.name
-        ? `<b>${person.name}</b>`
-        : `Имя неизвестно, <b>${person.userId}</b>`;
-      const phone = person.phone ? person.phone : 'нет';
-      const username = person.username ? `@${person.username}` : 'нет';
-
-      return `${name}, кол-во билетов: ${person.ticket}
-tel: ${phone} / tg: ${username}`;
-    }).join('\n');
-
-    const text = eventsWithContacts.map((event) => `<b>${event.title}</b>
-${getTextPerson(event.persons)}`).join('\n\n');
+    const text = textMarkup.getTextAdminList(eventsWithContacts);
 
     this._bot.sendMessage(chatId, text, {
       parse_mode: 'HTML',
