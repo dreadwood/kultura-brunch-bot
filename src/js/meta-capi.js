@@ -14,7 +14,7 @@
 
 'use strict';
 
-const bizSdk = require('facebook-nodejs-business-sdk');
+const axios = require('axios');
 const helpers = require('./helpers');
 
 const {
@@ -29,17 +29,11 @@ const county = 'ge';
 const currency = 'GEL';
 const actionSource = 'chat';
 
-const Content = bizSdk.Content;
-const CustomData = bizSdk.CustomData;
-const EventRequest = bizSdk.EventRequest;
-const UserData = bizSdk.UserData;
-const ServerEvent = bizSdk.ServerEvent;
-
-bizSdk.FacebookAdsApi.init(META_ACCESS_TOKEN);
+const URL_API = `https://graph.facebook.com/v15.0/${META_PIXEL_ID}/events`;
 
 const sendEventMeta = ({
   eventName,
-  externalId,
+  userId,
   phone,
   eventId,
   eventTitle,
@@ -54,56 +48,75 @@ const sendEventMeta = ({
     return;
   }
 
+  const externalId = typeof userId === 'number' ? userId.toString() : userId;
   const tel = phone ? helpers.normalizePhoneNumber(phone) : null;
   const contentPrice = +price || null;
   const contentQuantity = ticket || 1;
   const currentTimestamp = Math.floor(new Date() / 1000);
 
 
-  const userData = (new UserData())
-    .setCity(city)
-    .setCountry(county) // ISO 3166-1 alpha-2
-    .setExternalId(externalId);
-  if (tel && tel.length >= 7 && tel.length <= 15) {userData.setPhone(tel);}
-
-
-  const content = new Content();
-  if (eventId) {content.setId(eventId);}
-  if (contentPrice) {
-    content
-      .setItemPrice(contentPrice)
-      .setQuantity(contentQuantity);
+  const userData = {
+    ct: [helpers.getSHA256Hash(city)],
+    country: [helpers.getSHA256Hash(county)],
+    external_id: [helpers.getSHA256Hash(externalId)],
+  };
+  if (tel && tel.length >= 7 && tel.length <= 15) {
+    userData.ph = [helpers.getSHA256Hash(tel)];
   }
 
 
-  const customData = (new CustomData());
-  if (eventTitle) {customData.setContentName(eventTitle);}
-  if (eventId) {customData.setContents([content]);}
+  const content = {};
+  if (eventId) {
+    content.id = eventId;
+  }
   if (contentPrice) {
-    customData
-      .setCurrency(currency) // ISO 4217
-      .setValue(contentPrice * contentQuantity);
+    content.item_price = contentPrice;
+    content.quantity = contentQuantity;
   }
 
 
-  const serverEvent = (new ServerEvent())
-    .setEventName(eventName)
-    .setEventTime(currentTimestamp)
-    .setUserData(userData)
-    .setActionSource(actionSource);
-  if (eventId) {serverEvent.setCustomData(customData);}
+  const customData = {};
+  if (eventTitle) {
+    customData.content_name = eventTitle;
+  }
+  if (eventId) {
+    customData.contents = [content];
+  }
+  if (contentPrice) {
+    customData.currency = currency;
+    customData.value = contentPrice * contentQuantity;
+  }
 
 
-  const eventsData = [serverEvent];
-  const eventRequest = (new EventRequest(META_ACCESS_TOKEN, META_PIXEL_ID))
-    .setEvents(eventsData);
-  if (META_TEST_CODE) {eventRequest.setTestEventCode(META_TEST_CODE);}
+  const serverEvent = {
+    event_name: eventName,
+    event_time: currentTimestamp,
+    action_source: actionSource,
+    user_data: userData,
+  };
+  if (eventId) {
+    serverEvent.custom_data = customData;
+  }
 
-  eventRequest.execute()
-    .then(
-      (response) => console.log('Response: ', response),
-      (err) => console.error('Error: ', err),
-    );
+
+  const reqData = {
+    data: [serverEvent],
+    access_token: META_ACCESS_TOKEN,
+  };
+  if (META_TEST_CODE) {
+    reqData.test_event_code = META_TEST_CODE;
+  }
+
+
+  axios.post(URL_API, reqData, {timeout: 1000})
+    // .then((response) => {
+    //   console.log(`Status code ${response.status}`);
+    //   console.log(response.data);
+    // })
+    .catch((err) => {
+      console.error(`Error: ${err.message}`);
+      // console.log(err);
+    });
 };
 
 module.exports = {

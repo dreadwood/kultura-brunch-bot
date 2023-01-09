@@ -59,10 +59,12 @@ bot.on('message', (msg, metadata) => {
 
     if (msg.text === UserCommands.START.command) {
       state.setState(user.id, {status: OrderStatus.BUY_WELCOME});
-      metaCAPI.sendEventMeta({
-        eventName: metaEvent.VIEW_CONTENT,
-        externalId: user.id,
-      });
+      if (!helpers.isAdmin(user.id, admins)) {
+        metaCAPI.sendEventMeta({
+          eventName: metaEvent.VIEW_CONTENT,
+          userId: user.id,
+        });
+      }
     }
 
     if (msg.text === UserCommands.RECEIPT.command) {
@@ -309,12 +311,15 @@ async function processRequest(chatId, type, msg, queryJsonData) {
         startSessionTime: Date.now(),
         status: OrderStatus.BUY_TICKET,
       });
-      metaCAPI.sendEventMeta({
-        eventName: metaEvent.INITIATE_CHECKOUT,
-        externalId: chatId,
-        eventId: event.id,
-        eventTitle: event.title,
-      });
+
+      if (!helpers.isAdmin(chatId, admins)) {
+        metaCAPI.sendEventMeta({
+          eventName: metaEvent.INITIATE_CHECKOUT,
+          userId: chatId,
+          eventId: event.id,
+          eventTitle: event.title,
+        });
+      }
 
       break;
     }
@@ -403,15 +408,17 @@ async function processRequest(chatId, type, msg, queryJsonData) {
             status: OrderStatus.BUY_PAYMENT,
           });
 
-          metaCAPI.sendEventMeta({
-            eventName: metaEvent.ADD_TO_CART,
-            externalId: chatId,
-            eventId: event.id,
-            eventTitle: event.title,
-            phone: msg.text,
-            fullPrice: event.full_price,
-            ticket: countTicket,
-          });
+          if (!helpers.isAdmin(chatId, admins)) {
+            metaCAPI.sendEventMeta({
+              eventName: metaEvent.ADD_TO_CART,
+              userId: chatId,
+              eventId: event.id,
+              eventTitle: event.title,
+              phone: msg.text,
+              fullPrice: event.full_price,
+              ticket: countTicket,
+            });
+          }
 
           screen.userPayment(chatId, event, countTicket);
         } else {
@@ -468,15 +475,17 @@ async function processRequest(chatId, type, msg, queryJsonData) {
           // OrderStatusCode.pending,
         ]);
 
-        metaCAPI.sendEventMeta({
-          eventName: metaEvent.PURCHASE,
-          externalId: chatId,
-          eventId: stateUser.event.id,
-          eventTitle: stateUser.event.title,
-          phone: stateUser.phone,
-          price: stateUser.event.full_price,
-          ticket: stateUser.countTicket,
-        });
+        if (!helpers.isAdmin(chatId, admins)) {
+          metaCAPI.sendEventMeta({
+            eventName: metaEvent.PURCHASE,
+            userId: chatId,
+            eventId: stateUser.event.id,
+            eventTitle: stateUser.event.title,
+            phone: stateUser.phone,
+            price: stateUser.event.full_price,
+            ticket: stateUser.countTicket,
+          });
+        }
 
         return;
       }

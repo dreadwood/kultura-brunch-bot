@@ -1,5 +1,6 @@
 'use strict';
 
+const crypto = require('crypto');
 const {TIME_SESSION} = require('./const');
 
 module.exports = {
@@ -64,5 +65,14 @@ module.exports = {
   */
   normalizePhoneNumber(phoneNumber) {
     return phoneNumber.replace(/[^0-9]/g, '').replace(/^0+/, '');
+  },
+
+  /**
+  * Хэширует строку с использованием функции SHA256
+  * @param {string} inputString
+  * @returns {string}
+  */
+  getSHA256Hash(inputString) {
+    return crypto.createHash('sha256').update(inputString).digest('hex');
   },
 };
