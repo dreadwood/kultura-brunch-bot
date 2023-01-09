@@ -93,3 +93,10 @@ module.exports.OrderCells = {
   LEGEND: 'A1:L1',
   DATA: 'A3:L',
 };
+
+module.exports.metaEvent = {
+  VIEW_CONTENT: 'ViewContent', // Просмотр контента
+  INITIATE_CHECKOUT: 'InitiateCheckout', // Начало оформления заказа
+  ADD_TO_CART: 'AddToCart', // Добавление в корзину
+  PURCHASE: 'Purchase', // Покупка
+};

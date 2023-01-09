@@ -18,6 +18,7 @@ const {
   UserQuery,
   UserCommands,
   AdminQuery,
+  metaEvent,
 } = require('./const');
 
 const {
@@ -26,6 +27,7 @@ const {
   getOrdersData,
   getEventsData,
 } = require('./data-service');
+const metaCAPI = require('./meta-capi');
 
 const {BOT_TOKEN, CHANEL_ID, ADMINS} = process.env;
 
@@ -57,6 +59,10 @@ bot.on('message', (msg, metadata) => {
 
     if (msg.text === UserCommands.START.command) {
       state.setState(user.id, {status: OrderStatus.BUY_WELCOME});
+      metaCAPI.sendEventMeta({
+        eventName: metaEvent.VIEW_CONTENT,
+        externalId: user.id,
+      });
     }
 
     if (msg.text === UserCommands.RECEIPT.command) {
@@ -303,6 +309,12 @@ async function processRequest(chatId, type, msg, queryJsonData) {
         startSessionTime: Date.now(),
         status: OrderStatus.BUY_TICKET,
       });
+      metaCAPI.sendEventMeta({
+        eventName: metaEvent.INITIATE_CHECKOUT,
+        externalId: chatId,
+        eventId: event.id,
+        eventTitle: event.title,
+      });
 
       break;
     }
@@ -386,9 +398,19 @@ async function processRequest(chatId, type, msg, queryJsonData) {
           state.setState(chatId, {
             orderId,
             startSessionTime: Date.now(),
-            phone: msg.text.replace('+', ''),
+            phone: msg.text.replace(/[^0-9]/g, ''),
             userName: msg.from.username,
             status: OrderStatus.BUY_PAYMENT,
+          });
+
+          metaCAPI.sendEventMeta({
+            eventName: metaEvent.ADD_TO_CART,
+            externalId: chatId,
+            eventId: event.id,
+            eventTitle: event.title,
+            phone: msg.text,
+            fullPrice: event.full_price,
+            ticket: countTicket,
           });
 
           screen.userPayment(chatId, event, countTicket);
@@ -445,6 +467,16 @@ async function processRequest(chatId, type, msg, queryJsonData) {
           stateUser.orderId,
           // OrderStatusCode.pending,
         ]);
+
+        metaCAPI.sendEventMeta({
+          eventName: metaEvent.PURCHASE,
+          externalId: chatId,
+          eventId: stateUser.event.id,
+          eventTitle: stateUser.event.title,
+          phone: stateUser.phone,
+          price: stateUser.event.full_price,
+          ticket: stateUser.countTicket,
+        });
 
         return;
       }

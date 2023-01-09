@@ -56,4 +56,13 @@ module.exports = {
     if (n1 === 1) { return words[0]; }
     return words[2];
   },
+
+  /**
+  * Убирает символы, буквы и начальные нули в номере телефона
+  * @param {number} phoneNumber
+  * @returns {string}
+  */
+  normalizePhoneNumber(phoneNumber) {
+    return phoneNumber.replace(/[^0-9]/g, '').replace(/^0+/, '');
+  },
 };
